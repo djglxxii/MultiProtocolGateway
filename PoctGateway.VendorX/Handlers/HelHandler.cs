@@ -9,7 +9,7 @@ namespace PoctGateway.VendorX.Handlers;
 [PoctHandler(order: 0, messageType: "HEL.R01")]
 public sealed class HelHandler : HandlerBase
 {
-    public override Task HandleAsync(SessionContext ctx, Func<Task> next)
+    public override async Task HandleAsync(SessionContext ctx, Func<Task> next)
     {
         var dev = ctx.CurrentXDocument?.Root?.Element("DEV");
         if (dev != null)
@@ -22,6 +22,6 @@ public sealed class HelHandler : HandlerBase
         var modelId = ctx.Items.TryGetValue("ModelId", out var model) ? model as string : null;
         LogInfo?.Invoke($"[HEL] Session {ctx.SessionId} initialized for device '{modelId ?? "unknown"}'.");
 
-        return next();
+        await next();
     }
 }

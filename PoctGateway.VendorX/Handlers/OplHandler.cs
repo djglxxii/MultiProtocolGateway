@@ -19,22 +19,26 @@ public sealed class OplHandler : HandlerBase
     {
         var state = GetOrCreateState(ctx);
 
-        if (ctx.MessageType == "DST.R01")
+        switch (ctx.MessageType)
         {
-            if (ctx.Items.TryGetValue("NeedsOperatorUpdate", out var needsUpdateObj)
-                && needsUpdateObj is bool needsUpdate
-                && needsUpdate
-                && !state.IsInProgress)
+            case "DST.R01":
             {
-                state.IsInProgress = true;
-                state.ChunkIndex = 0;
-                LogInfo?.Invoke($"[OPL] Session {ctx.SessionId}: Starting OPL push (POC).");
-                await SendNextChunkAsync(ctx, state);
+                if (ctx.Items.TryGetValue("NeedsOperatorUpdate", out var needsUpdateObj)
+                    && needsUpdateObj is bool needsUpdate
+                    && needsUpdate
+                    && !state.IsInProgress)
+                {
+                    state.IsInProgress = true;
+                    state.ChunkIndex = 0;
+                    LogInfo?.Invoke($"[OPL] Session {ctx.SessionId}: Starting OPL push (POC).");
+                    await SendNextChunkAsync(ctx, state);
+                }
+
+                break;
             }
-        }
-        else if (ctx.MessageType == "ACK.R01" && state.IsInProgress)
-        {
-            await SendNextChunkAsync(ctx, state);
+            case "ACK.R01" when state.IsInProgress:
+                await SendNextChunkAsync(ctx, state);
+                break;
         }
 
         await next();

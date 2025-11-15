@@ -7,7 +7,7 @@ namespace PoctGateway.VendorX.Handlers;
 [PoctHandler(order: 10, messageType: "DST.R01")]
 public sealed class DstHandler : HandlerBase
 {
-    public override Task HandleAsync(SessionContext ctx, Func<Task> next)
+    public override async Task HandleAsync(SessionContext ctx, Func<Task> next)
     {
         var root = ctx.CurrentXDocument?.Root;
         if (root != null)
@@ -18,6 +18,6 @@ public sealed class DstHandler : HandlerBase
 
         LogInfo?.Invoke($"[DST] Session {ctx.SessionId}: HasNewResults=true, NeedsOperatorUpdate=true (POC).");
 
-        return next();
+        await next();
     }
 }

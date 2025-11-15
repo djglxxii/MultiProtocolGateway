@@ -15,7 +15,7 @@ public sealed class ObsHandler : HandlerBase
         public int ObsMessageCount { get; set; }
     }
 
-    public override Task HandleAsync(SessionContext ctx, Func<Task> next)
+    public override async Task HandleAsync(SessionContext ctx, Func<Task> next)
     {
         var state = GetOrCreateState(ctx);
 
@@ -29,7 +29,7 @@ public sealed class ObsHandler : HandlerBase
                 break;
         }
 
-        return next();
+        await next();
     }
 
     private static ObsState GetOrCreateState(SessionContext ctx)
