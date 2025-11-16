@@ -10,7 +10,7 @@ using PoctGateway.Core.Vendors;
 using PoctGateway.Host.StubVendors;
 using PoctGateway.VendorX;
 
-var port = args.Length > 0 && int.TryParse(args[0], out var parsedPort) ? parsedPort : 5555;
+var port = args.Length > 0 && int.TryParse(args[0], out var parsedPort) ? parsedPort : 9000;
 
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -41,17 +41,35 @@ return;
 
 static VendorRegistry BuildVendorRegistry(ILogger logger)
 {
+    // Ensure at least these assemblies are loaded (optional but can help with lazy loading)
     _ = typeof(VendorXDevicePack);
     _ = typeof(Hl7StubDevicePack);
     _ = typeof(AstmStubDevicePack);
     _ = typeof(CustomBinaryDevicePack);
 
-    var packs = AppDomain.CurrentDomain
-        .GetAssemblies()
+    // Make sure all referenced assemblies are loaded into the current AppDomain
+    var assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+    var entry = Assembly.GetEntryAssembly();
+    if (entry != null)
+    {
+        var asm = typeof(VendorXDevicePack).Assembly;
+        var asn = asm.GetName();
+        var ass = entry.GetReferencedAssemblies().Where(a => a.FullName == asn.FullName);//.ToList();
+        foreach (var name in entry.GetReferencedAssemblies())
+        {
+            if (assemblies.All(a => a.FullName != name.FullName))
+            {
+                assemblies.Add(Assembly.Load(name));
+            }
+        }
+    }
+
+    var packs = assemblies
         .SelectMany(SafeGetTypes)
-        .Where(t => typeof(IVendorDevicePack).IsAssignableFrom(t)
-                    && !t.IsAbstract
-                    && t.GetConstructor(Type.EmptyTypes) != null)
+        .Where(t =>
+            typeof(IVendorDevicePack).IsAssignableFrom(t) &&
+            !t.IsAbstract &&
+            t.GetConstructor(Type.EmptyTypes) != null)
         .Select(t => (IVendorDevicePack)Activator.CreateInstance(t)!)
         .ToList();
 
@@ -60,7 +78,9 @@ static VendorRegistry BuildVendorRegistry(ILogger logger)
         throw new InvalidOperationException("No IVendorDevicePack implementations were discovered.");
     }
 
-    logger.LogInformation("Loaded vendor packs: {Vendors}", string.Join(", ", packs.Select(p => $"{p.VendorKey} ({p.ProtocolKind})")));
+    logger.LogInformation(
+        "Loaded vendor packs: {Vendors}",
+        string.Join(", ", packs.Select(p => $"{p.VendorKey} ({p.ProtocolKind})")));
 
     return new VendorRegistry(packs);
 }
@@ -135,8 +155,7 @@ static async Task HandleConnectionAsync(TcpClient client, VendorRegistry vendorR
         logError: message => logger.LogError("{Message}", message));
 
     var buffer = new byte[8192];
-    var sb = new StringBuilder();
-
+   
     try
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -147,25 +166,21 @@ static async Task HandleConnectionAsync(TcpClient client, VendorRegistry vendorR
                 break;
             }
 
-            sb.Append(Encoding.UTF8.GetString(buffer, 0, read));
+            var payload = Encoding.UTF8.GetString(buffer, 0, read);
 
-            string? line;
-            while ((line = ExtractLine(sb)) != null)
+            if (string.IsNullOrWhiteSpace(payload))
             {
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                try
-                {
-                    await engine.ProcessInboundAsync(line);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Error processing inbound payload for session {SessionId}.", ctx.SessionId);
-                    return;
-                }
+            try
+            {
+                await engine.ProcessInboundAsync(payload);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error processing inbound payload for session {SessionId}.", ctx.SessionId);
+                return;
             }
         }
     }
