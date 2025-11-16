@@ -127,7 +127,7 @@ public sealed class SessionEngine
 
             var attributes = handlerType
                 .GetCustomAttributes<PoctHandlerAttribute>(inherit: true)
-                .DefaultIfEmpty(new PoctHandlerAttribute(order: 0))
+                .DefaultIfEmpty(new PoctHandlerAttribute())
                 .ToArray();
 
             descriptors.Add(new HandlerDescriptor(handler, attributes));
@@ -149,19 +149,16 @@ public sealed class SessionEngine
         foreach (var descriptor in _handlerDescriptors)
         {
             var matchingAttribute = descriptor.Attributes
-                .Where(a => string.IsNullOrEmpty(a.MessageType)
-                            || string.Equals(a.MessageType, normalized, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(a => a.Order)
-                .FirstOrDefault();
+                .FirstOrDefault(a => string.IsNullOrEmpty(a.MessageType)
+                                     || string.Equals(a.MessageType, normalized, StringComparison.OrdinalIgnoreCase));
 
             if (matchingAttribute != null)
             {
-                matches.Add(new HandlerInvocation(descriptor.Handler, matchingAttribute.Order));
+                matches.Add(new HandlerInvocation(descriptor.Handler));
             }
         }
 
         return matches
-            .OrderBy(m => m.Order)
             .ToList();
     }
 
@@ -198,5 +195,5 @@ public sealed class SessionEngine
 
     private sealed record HandlerDescriptor(HandlerBase Handler, IReadOnlyList<PoctHandlerAttribute> Attributes);
 
-    private sealed record HandlerInvocation(HandlerBase Handler, int Order);
+    private sealed record HandlerInvocation(HandlerBase Handler);
 }

@@ -23,7 +23,6 @@ public sealed class AstmStubDevicePack : IVendorDevicePack
         => new[] { typeof(AstmStubHandler) };
 }
 
-[PoctHandler(order: 0, messageType: null)]
 public sealed class AstmStubHandler : HandlerBase
 {
     public override Task HandleAsync(SessionContext ctx, Func<Task> next)

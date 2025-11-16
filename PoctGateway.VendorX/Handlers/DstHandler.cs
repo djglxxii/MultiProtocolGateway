@@ -4,7 +4,7 @@ using PoctGateway.Core.Session;
 
 namespace PoctGateway.VendorX.Handlers;
 
-[PoctHandler(order: 10, messageType: "DST.R01")]
+[PoctHandler(messageType: "DST.R01")]
 public sealed class DstHandler : HandlerBase
 {
     public override async Task HandleAsync(SessionContext ctx, Func<Task> next)

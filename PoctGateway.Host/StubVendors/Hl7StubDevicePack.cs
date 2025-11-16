@@ -19,7 +19,6 @@ public sealed class Hl7StubDevicePack : IVendorDevicePack
         => new[] { typeof(Hl7StubHandler) };
 }
 
-[PoctHandler(order: 0, messageType: null)]
 public sealed class Hl7StubHandler : HandlerBase
 {
     public override Task HandleAsync(SessionContext ctx, Func<Task> next)

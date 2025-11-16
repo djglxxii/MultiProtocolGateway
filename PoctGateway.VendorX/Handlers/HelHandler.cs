@@ -6,7 +6,7 @@ using PoctGateway.Core.Session;
 
 namespace PoctGateway.VendorX.Handlers;
 
-[PoctHandler(order: 0, messageType: "HEL.R01")]
+[PoctHandler(messageType: "HEL.R01")]
 public sealed class HelHandler : HandlerBase
 {
     public override async Task HandleAsync(SessionContext ctx, Func<Task> next)

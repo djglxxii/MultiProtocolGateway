@@ -4,7 +4,7 @@ using PoctGateway.Core.Session;
 
 namespace PoctGateway.VendorX.Handlers;
 
-[PoctHandler(order: 30, messageType: null)]
+[PoctHandler(messageType: null)]
 public sealed class OplHandler : HandlerBase
 {
     private const string OplStateKey = "VendorX.OplState";

@@ -22,7 +22,6 @@ public sealed class CustomBinaryDevicePack : IVendorDevicePack
         => new[] { typeof(CustomBinaryHandler) };
 }
 
-[PoctHandler(order: 0, messageType: null)]
 public sealed class CustomBinaryHandler : HandlerBase
 {
     public override Task HandleAsync(SessionContext ctx, Func<Task> next)

@@ -41,7 +41,7 @@ public sealed class VendorXDevicePack : IVendorDevicePack
         return new[]
         {
             typeof(HelHandler),
-            typeof(DstHandler),
+            //typeof(DstHandler),
             typeof(ObsHandler),
             typeof(OplHandler)
         };
