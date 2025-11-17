@@ -29,6 +29,7 @@ public sealed class ObsHandler : HandlerBase
                 break;
         }
 
+        ctx.Items["Poct.AckType"] = "AE";
         await next();
     }
 

@@ -203,7 +203,7 @@ public sealed class SessionEngine
     /// </summary>
     private async Task SendAcknowledgementIfNeededAsync()
     {
-        // Only XML messages can carry the HDR control ID in this model.
+        // Only XML messages can carry the HDR control ID.
         if (Context.CurrentXDocument is null)
         {
             return;
@@ -211,33 +211,49 @@ public sealed class SessionEngine
 
         var messageType = Context.MessageType ?? string.Empty;
 
-        // Do not ACK an ACK.
+        // Do not ACK an ACK to avoid loops.
         if (messageType.StartsWith("ACK", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        // <HDR><HDR.control_id V="..." /></HDR>
+        // Allow a handler to suppress ACK/NAK entirely.
+        if (Context.Items.TryGetValue(SessionContextKeys.Ack.Suppress, out var suppressObj) &&
+            suppressObj is bool suppress &&
+            suppress)
+        {
+            return;
+        }
+
+        // Extract control ID: <HDR><HDR.control_id V="..." /></HDR>
         var hdr = Context.CurrentXDocument.Root?.Element("HDR");
         var controlId = hdr?.Element("HDR.control_id")?.Attribute("V")?.Value;
-
         if (string.IsNullOrWhiteSpace(controlId))
         {
             return;
         }
 
+        // Determine ACK type: default AA, handler may override to AE (NAK).
+        var ackType = "AA"; // normal ACK
+        if (Context.Items.TryGetValue(SessionContextKeys.Ack.Type, out var ackTypeObj) &&
+            ackTypeObj is string requested &&
+            !string.IsNullOrWhiteSpace(requested))
+        {
+            ackType = requested; // e.g. "AE" for NAK
+        }
+
         var ackXml = new XElement("ACK",
-            new XElement("ACK.type_cd", new XAttribute("V", "AA")),
+            new XElement("ACK.type_cd",      new XAttribute("V", ackType)),
             new XElement("ACK.ack_control_id", new XAttribute("V", controlId)));
 
         var ackString = ackXml.ToString(SaveOptions.DisableFormatting);
 
         _logInfo?.Invoke(
-            $"[ACK] Session {Context.SessionId}: Sending acknowledgement for control ID '{controlId}'.");
+            $"[ACK] Session {Context.SessionId}: Sending {(ackType == "AE" ? "NAK" : "ACK")} for control ID '{controlId}'.");
 
         await _sendRawAsync(ackString);
     }
-
+    
     private sealed record HandlerDescriptor(HandlerBase Handler, IReadOnlyList<PoctHandlerAttribute> Attributes);
 
     private sealed record HandlerInvocation(HandlerBase Handler);
