@@ -23,4 +23,11 @@ public sealed class SessionContext
 
     public List<SessionMessage> MessageHistory { get; } = new();
     public IDictionary<string, object> Items { get; } = new Dictionary<string, object>();
+
+    /// <summary>
+    /// Optional error text for this inbound message. When non-empty,
+    /// the engine will send an AE (error) acknowledgement and include
+    /// this message in the ACK payload.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
 }

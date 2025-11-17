@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Session;
@@ -19,7 +15,7 @@ public sealed class SessionEngine
     private readonly Action<string> _logError;
 
     private IVendorDevicePack? _boundVendor;
-    private List<HandlerDescriptor>? _handlerDescriptors;
+    private List<HandlerBase>? _handlers;
 
     public SessionContext Context { get; }
 
@@ -50,6 +46,9 @@ public sealed class SessionEngine
             return;
         }
 
+        // Reset per-message error state
+        Context.ErrorMessage = null;
+
         if (_boundVendor is null)
         {
             BindVendor(rawPayload);
@@ -67,70 +66,23 @@ public sealed class SessionEngine
             RawPayload = rawPayload
         });
 
-        var handlers = ResolveHandlers(Context.MessageType);
+        var handlers = ResolveHandlers();
         if (handlers.Count == 0)
         {
-            _logInfo($"Session {Context.SessionId}: No handlers for message type '{Context.MessageType}'.");
+            _logInfo($"Session {Context.SessionId}: No handlers registered for vendor '{_boundVendor?.VendorKey}'.");
             return;
         }
 
-        // For this inbound message, queue all outbound messages requested by handlers.
-        // These will be sent AFTER any ACK has been generated and sent.
-        var deferredOutbound = new List<string>();
-
-        Task EnqueueOutboundAsync(string payload)
+        Func<Task> next = () => Task.CompletedTask;
+        foreach (var handler in handlers.AsEnumerable().Reverse())
         {
-            if (!string.IsNullOrWhiteSpace(payload))
-            {
-                deferredOutbound.Add(payload);
-            }
-
-            return Task.CompletedTask;
+            var downstream = next;
+            next = () => handler.HandleAsync(Context, downstream);
         }
 
-        // Temporarily replace the handlers' SendRawAsync with the deferred sender.
-        var originalSendDelegates = new Dictionary<HandlerBase, Func<string, Task>?>();
-        foreach (var invocation in handlers)
-        {
-            var handler = invocation.Handler;
-            if (!originalSendDelegates.ContainsKey(handler))
-            {
-                originalSendDelegates[handler] = handler.SendRawAsync;
-                handler.SendRawAsync = EnqueueOutboundAsync;
-            }
-        }
+        await next();
 
-        try
-        {
-            Func<Task> next = () => Task.CompletedTask;
-
-            foreach (var descriptor in handlers.AsEnumerable().Reverse())
-            {
-                var handler = descriptor.Handler;
-                var downstream = next;
-                next = () => handler.HandleAsync(Context, downstream);
-            }
-
-            // Execute handler pipeline.
-            await next();
-
-            // After all handlers: send ACK/NAK first.
-            await SendAcknowledgementIfNeededAsync();
-
-            // Then flush any outbound messages that handlers requested via SendAsync.
-            foreach (var payload in deferredOutbound)
-            {
-                await _sendRawAsync(payload);
-            }
-        }
-        finally
-        {
-            // Restore original SendRawAsync delegates to avoid leaking state across messages.
-            foreach (var kvp in originalSendDelegates)
-            {
-                kvp.Key.SendRawAsync = kvp.Value;
-            }
-        }
+        await SendAcknowledgementIfNeededAsync();
     }
 
     private void BindVendor(string rawPayload)
@@ -148,12 +100,12 @@ public sealed class SessionEngine
 
         _boundVendor = vendor;
         Context.Items["VendorKey"] = vendor.VendorKey;
-        _handlerDescriptors = BuildHandlerDescriptors(vendor);
+        _handlers = BuildHandlers(vendor);
     }
 
-    private List<HandlerDescriptor> BuildHandlerDescriptors(IVendorDevicePack vendor)
+    private List<HandlerBase> BuildHandlers(IVendorDevicePack vendor)
     {
-        var descriptors = new List<HandlerDescriptor>();
+        var handlers = new List<HandlerBase>();
 
         foreach (var handlerType in vendor.GetHandlerTypes())
         {
@@ -172,40 +124,15 @@ public sealed class SessionEngine
             handler.LogInfo = _logInfo;
             handler.LogError = _logError;
 
-            var attributes = handlerType
-                .GetCustomAttributes<PoctHandlerAttribute>(inherit: true)
-                .DefaultIfEmpty(new PoctHandlerAttribute())
-                .ToArray();
-
-            descriptors.Add(new HandlerDescriptor(handler, attributes));
+            handlers.Add(handler);
         }
 
-        return descriptors;
+        return handlers;
     }
 
-    private IReadOnlyList<HandlerInvocation> ResolveHandlers(string? messageType)
+    private IReadOnlyList<HandlerBase> ResolveHandlers()
     {
-        if (_handlerDescriptors is null)
-        {
-            return Array.Empty<HandlerInvocation>();
-        }
-
-        var normalized = messageType ?? string.Empty;
-        var matches = new List<HandlerInvocation>();
-
-        foreach (var descriptor in _handlerDescriptors)
-        {
-            var matchingAttribute = descriptor.Attributes
-                .FirstOrDefault(a => string.IsNullOrEmpty(a.MessageType)
-                                     || string.Equals(a.MessageType, normalized, StringComparison.OrdinalIgnoreCase));
-
-            if (matchingAttribute != null)
-            {
-                matches.Add(new HandlerInvocation(descriptor.Handler));
-            }
-        }
-
-        return matches.ToList();
+        return _handlers ?? (IReadOnlyList<HandlerBase>)Array.Empty<HandlerBase>();
     }
 
     private static XDocument? TryParseXml(string rawPayload)
@@ -240,13 +167,13 @@ public sealed class SessionEngine
     }
 
     /// <summary>
-    /// Examines the current message and sends a POCT1A acknowledgement back to the
-    /// device if the message is XML with an HDR.control_id element. Acks are not
-    /// sent in response to ACK messages themselves to avoid loops.
+    /// Sends a POCT1A acknowledgement back to the device.
+    /// - AA when Context.ErrorMessage is null/empty.
+    /// - AE when Context.ErrorMessage is set, including the text.
     /// </summary>
     private async Task SendAcknowledgementIfNeededAsync()
     {
-        // Only XML messages can carry the HDR control ID.
+        // Only XML messages can carry the HDR control ID in this model.
         if (Context.CurrentXDocument is null)
         {
             return;
@@ -260,15 +187,7 @@ public sealed class SessionEngine
             return;
         }
 
-        // Allow a handler to suppress ACK/NAK entirely.
-        if (Context.Items.TryGetValue(SessionContextKeys.Ack.Suppress, out var suppressObj) &&
-            suppressObj is bool suppress &&
-            suppress)
-        {
-            return;
-        }
-
-        // Extract control ID: <HDR><HDR.control_id V="..." /></HDR>
+        // <HDR><HDR.control_id V="..." /></HDR>
         var hdr = Context.CurrentXDocument.Root?.Element("HDR");
         var controlId = hdr?.Element("HDR.control_id")?.Attribute("V")?.Value;
         if (string.IsNullOrWhiteSpace(controlId))
@@ -276,28 +195,24 @@ public sealed class SessionEngine
             return;
         }
 
-        // Determine ACK type: default AA, handler may override to AE (NAK).
-        var ackType = "AA"; // normal ACK
-        if (Context.Items.TryGetValue(SessionContextKeys.Ack.Type, out var ackTypeObj) &&
-            ackTypeObj is string requested &&
-            !string.IsNullOrWhiteSpace(requested))
-        {
-            ackType = requested; // e.g. "AE" for NAK
-        }
+        var hasError = !string.IsNullOrWhiteSpace(Context.ErrorMessage);
+        var ackCode = hasError ? "AE" : "AA";
 
-        var ackXml = new XElement("ACK",
-            new XElement("ACK.type_cd",      new XAttribute("V", ackType)),
+        var ackElement = new XElement("ACK",
+            new XElement("ACK.type_cd",        new XAttribute("V", ackCode)),
             new XElement("ACK.ack_control_id", new XAttribute("V", controlId)));
 
-        var ackString = ackXml.ToString(SaveOptions.DisableFormatting);
+        if (hasError)
+        {
+            ackElement.Add(
+                new XElement("ACK.error_msg", new XAttribute("V", Context.ErrorMessage!)));
+        }
+
+        var ackString = ackElement.ToString(SaveOptions.DisableFormatting);
 
         _logInfo?.Invoke(
-            $"[ACK] Session {Context.SessionId}: Sending {(ackType == "AE" ? "NAK" : "ACK")} for control ID '{controlId}'.");
+            $"[ACK] Session {Context.SessionId}: Sending {(hasError ? "NAK (AE)" : "ACK (AA)")} for control ID '{controlId}'.");
 
         await _sendRawAsync(ackString);
     }
-    
-    private sealed record HandlerDescriptor(HandlerBase Handler, IReadOnlyList<PoctHandlerAttribute> Attributes);
-
-    private sealed record HandlerInvocation(HandlerBase Handler);
 }

@@ -3,8 +3,7 @@ using PoctGateway.Core.Session;
 
 namespace PoctGateway.VendorX.Handlers;
 
-[PoctHandler(messageType: null)]
-public sealed class ObsHandler : HandlerBase
+public sealed class OBS_Handler : HandlerBase
 {
     private const string ObsStateKey = "VendorX.ObsState";
 

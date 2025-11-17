@@ -3,8 +3,7 @@ using PoctGateway.Core.Session;
 
 namespace PoctGateway.VendorX.Handlers;
 
-[PoctHandler(messageType: "HEL.R01")]
-public sealed class HelHandler : HandlerBase
+public sealed class HEL_Handler : HandlerBase
 {
     public override async Task HandleAsync(SessionContext ctx, Func<Task> next)
     {
