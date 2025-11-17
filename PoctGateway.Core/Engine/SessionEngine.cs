@@ -84,6 +84,10 @@ public sealed class SessionEngine
         }
 
         await next();
+
+        // After all handlers have executed, emit a POCT1A acknowledgement
+        // back to the device when appropriate.
+        await SendAcknowledgementIfNeededAsync();
     }
 
     private void BindVendor(string rawPayload)
@@ -158,8 +162,7 @@ public sealed class SessionEngine
             }
         }
 
-        return matches
-            .ToList();
+        return matches.ToList();
     }
 
     private static XDocument? TryParseXml(string rawPayload)
@@ -191,6 +194,48 @@ public sealed class SessionEngine
         var delimiters = new[] { '|', '^', '~', '\r', '\n', '\t', ' ' };
         var index = trimmed.IndexOfAny(delimiters);
         return index > 0 ? trimmed[..index] : trimmed;
+    }
+
+    /// <summary>
+    /// Examines the current message and sends a POCT1A acknowledgement back to the
+    /// device if the message is XML with an HDR.control_id element. Acks are not
+    /// sent in response to ACK messages themselves to avoid loops.
+    /// </summary>
+    private async Task SendAcknowledgementIfNeededAsync()
+    {
+        // Only XML messages can carry the HDR control ID in this model.
+        if (Context.CurrentXDocument is null)
+        {
+            return;
+        }
+
+        var messageType = Context.MessageType ?? string.Empty;
+
+        // Do not ACK an ACK.
+        if (messageType.StartsWith("ACK", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        // <HDR><HDR.control_id V="..." /></HDR>
+        var hdr = Context.CurrentXDocument.Root?.Element("HDR");
+        var controlId = hdr?.Element("HDR.control_id")?.Attribute("V")?.Value;
+
+        if (string.IsNullOrWhiteSpace(controlId))
+        {
+            return;
+        }
+
+        var ackXml = new XElement("ACK",
+            new XElement("ACK.type_cd", new XAttribute("V", "AA")),
+            new XElement("ACK.ack_control_id", new XAttribute("V", controlId)));
+
+        var ackString = ackXml.ToString(SaveOptions.DisableFormatting);
+
+        _logInfo?.Invoke(
+            $"[ACK] Session {Context.SessionId}: Sending acknowledgement for control ID '{controlId}'.");
+
+        await _sendRawAsync(ackString);
     }
 
     private sealed record HandlerDescriptor(HandlerBase Handler, IReadOnlyList<PoctHandlerAttribute> Attributes);
