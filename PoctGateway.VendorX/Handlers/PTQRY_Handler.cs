@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Session;
 
@@ -7,17 +8,38 @@ public class PTQRY_Handler : HandlerBase
 {
     public override async Task HandleAsync(SessionContext ctx, Func<Task> next)
     {
-        var dev = ctx.CurrentXDocument?.Root?.Element("DEV");
-        if (dev != null)
+        if (ctx.MessageType == "HEL.R01")
         {
-            ctx.Items["DeviceId"] = dev.Element("DEV.device_id")?.Attribute("V")?.Value ?? string.Empty;
-            ctx.Items["VendorId"] = dev.Element("DEV.vendor_id")?.Attribute("V")?.Value ?? string.Empty;
-            ctx.Items["ModelId"] = dev.Element("DEV.model_id")?.Attribute("V")?.Value ?? string.Empty;
+            var doc = ctx.CurrentXDocument;
+            var vendorSpecific = doc.Descendants("DCP.vendor_specific").FirstOrDefault();
+            string raw = vendorSpecific?.Value?.Trim() ?? "";
+            var parts = raw.Split('=');
+            var pid = parts[1];
+            
+            string xml = @"
+<DTV.CEPHEID.PTQRY>
+  <HDR>
+    <HDR.message_type V=""DTV.CEPHEID.PTQRY"" SN=""CEPHEID"" SV=""2.0"" />
+    <HDR.control_id V=""545"" />
+    <HDR.version_id V=""POCT1"" />
+    <HDR.creation_dttm V=""2023-01-12T01:44:28-08:00"" />
+  </HDR>
+  <DTV>
+    <DTV.command_cd V=""1"" SN=""CEPHEID"" SV=""2.0"" />
+  </DTV>
+  <PT>
+    <PT.patient_id V=""1268"" />
+    <PT.name V=""Jane Doe"" />
+    <PT.birth_date V=""2011-11-01T17:19:10-07:00"" />
+  </PT>
+</DTV.CEPHEID.PTQRY>";
+            await SendAsync(xml);
         }
-
-        var modelId = ctx.Items.TryGetValue("ModelId", out var model) ? model as string : null;
-        LogInfo?.Invoke($"[HEL] Session {ctx.SessionId} initialized for device '{modelId ?? "unknown"}'.");
-
+        
         await next();
     }
 }
+
+// var vendorSpecific = xdoc
+//     .Descendants("DCP.vendor_specific")
+//     .FirstOrDefault();
