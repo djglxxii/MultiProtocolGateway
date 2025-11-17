@@ -21,6 +21,9 @@ public sealed class ObsHandler : HandlerBase
 
         switch (ctx.MessageType)
         {
+            case "DST.R01":
+                await HandleDst(ctx, state);
+                break;
             case "OBS.R01":
                 HandleObs(ctx, state);
                 break;
@@ -29,7 +32,6 @@ public sealed class ObsHandler : HandlerBase
                 break;
         }
 
-        ctx.Items["Poct.AckType"] = "AE";
         await next();
     }
 
@@ -42,6 +44,15 @@ public sealed class ObsHandler : HandlerBase
         }
 
         return state;
+    }
+
+    private async Task HandleDst(SessionContext ctx, ObsState state)
+    {
+        var raw = ctx.CurrentRaw;
+        if (raw.Contains("DST.new_observations_qty"))
+        {
+            await SendAsync(@"<REQ><REQ.request_cd V=""ROBS""/></REQ>");
+        }
     }
 
     private void HandleObs(SessionContext ctx, ObsState state)
