@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Session;
 
