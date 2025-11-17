@@ -74,20 +74,63 @@ public sealed class SessionEngine
             return;
         }
 
-        Func<Task> next = () => Task.CompletedTask;
+        // For this inbound message, queue all outbound messages requested by handlers.
+        // These will be sent AFTER any ACK has been generated and sent.
+        var deferredOutbound = new List<string>();
 
-        foreach (var descriptor in handlers.AsEnumerable().Reverse())
+        Task EnqueueOutboundAsync(string payload)
         {
-            var handler = descriptor.Handler;
-            var downstream = next;
-            next = () => handler.HandleAsync(Context, downstream);
+            if (!string.IsNullOrWhiteSpace(payload))
+            {
+                deferredOutbound.Add(payload);
+            }
+
+            return Task.CompletedTask;
         }
 
-        await next();
+        // Temporarily replace the handlers' SendRawAsync with the deferred sender.
+        var originalSendDelegates = new Dictionary<HandlerBase, Func<string, Task>?>();
+        foreach (var invocation in handlers)
+        {
+            var handler = invocation.Handler;
+            if (!originalSendDelegates.ContainsKey(handler))
+            {
+                originalSendDelegates[handler] = handler.SendRawAsync;
+                handler.SendRawAsync = EnqueueOutboundAsync;
+            }
+        }
 
-        // After all handlers have executed, emit a POCT1A acknowledgement
-        // back to the device when appropriate.
-        await SendAcknowledgementIfNeededAsync();
+        try
+        {
+            Func<Task> next = () => Task.CompletedTask;
+
+            foreach (var descriptor in handlers.AsEnumerable().Reverse())
+            {
+                var handler = descriptor.Handler;
+                var downstream = next;
+                next = () => handler.HandleAsync(Context, downstream);
+            }
+
+            // Execute handler pipeline.
+            await next();
+
+            // After all handlers: send ACK/NAK first.
+            await SendAcknowledgementIfNeededAsync();
+
+            // Then flush any outbound messages that handlers requested via SendAsync.
+            foreach (var payload in deferredOutbound)
+            {
+                await _sendRawAsync(payload);
+            }
+        }
+        finally
+        {
+            // Restore original SendRawAsync delegates to avoid leaking state across messages.
+            foreach (var kvp in originalSendDelegates)
+            {
+                kvp.Key.SendRawAsync = kvp.Value;
+            }
+        }
     }
 
     private void BindVendor(string rawPayload)
