@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoctGateway.VendorX", "Poct
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoctGateway.Host", "PoctGateway.Host\PoctGateway.Host.csproj", "{56CB9C26-9237-4A19-A73A-30E388EEF4F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoctGateway.Vendor.Cepheid", "PoctGateway.Vendor.Cepheid\PoctGateway.Vendor.Cepheid.csproj", "{0760CB32-1F85-47E6-9656-0259601460B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{56CB9C26-9237-4A19-A73A-30E388EEF4F0}.Release|x64.Build.0 = Release|Any CPU
 		{56CB9C26-9237-4A19-A73A-30E388EEF4F0}.Release|x86.ActiveCfg = Release|Any CPU
 		{56CB9C26-9237-4A19-A73A-30E388EEF4F0}.Release|x86.Build.0 = Release|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Debug|x64.Build.0 = Debug|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Debug|x86.Build.0 = Debug|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Release|x64.ActiveCfg = Release|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Release|x64.Build.0 = Release|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Release|x86.ActiveCfg = Release|Any CPU
+		{0760CB32-1F85-47E6-9656-0259601460B5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
