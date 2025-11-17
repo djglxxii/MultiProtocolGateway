@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using PoctGateway.Core.Vendors;
 using PoctGateway.Core.Session;
-using PoctGateway.VendorX.Handlers;
+using PoctGateway.Core.Vendors;
 
-namespace PoctGateway.VendorX;
+namespace PoctGateway.Analyzers.GeneXpert;
 
-public sealed class VendorXDevicePack : IVendorDevicePack
+public sealed class GeneXpertDevicePack : IVendorDevicePack
 {
-    public string VendorKey => "VendorX";
+    public string VendorKey => "Cepheid_GeneXpert";
     public string ProtocolKind => "POCT1A";
-
     public bool IsMatch(RawInitialPacket packet)
     {
         try
@@ -38,12 +36,6 @@ public sealed class VendorXDevicePack : IVendorDevicePack
 
     public IReadOnlyCollection<Type> GetHandlerTypes()
     {
-        return new[]
-        {
-            typeof(HEL_Handler),
-            typeof(OBS_Handler),
-            typeof(OPL_Handler),
-            typeof(PTQRY_Handler)
-        };
+        throw new NotImplementedException();
     }
 }

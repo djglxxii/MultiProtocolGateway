@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <Folder Include="GeneXpert\Handlers\" />
+      <Folder Include="GeneXpert\Models\" />
     </ItemGroup>
 
     <ItemGroup>

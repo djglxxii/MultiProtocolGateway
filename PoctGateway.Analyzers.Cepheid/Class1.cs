@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PoctGateway.Cepheid
+namespace PoctGateway.Analyzers.Cepheid
 {
     public class Class1
     {

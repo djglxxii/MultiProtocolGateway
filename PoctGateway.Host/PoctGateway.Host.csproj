@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\PoctGateway.Analyzers.GeneXpert\PoctGateway.Analyzers.GeneXpert.csproj" />
     <ProjectReference Include="..\PoctGateway.Core\PoctGateway.Core.csproj" />
     <ProjectReference Include="..\PoctGateway.VendorX\PoctGateway.VendorX.csproj" />
   </ItemGroup>

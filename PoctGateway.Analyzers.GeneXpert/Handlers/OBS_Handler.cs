@@ -1,7 +1,9 @@
+using System;
+using System.Threading.Tasks;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Session;
 
-namespace PoctGateway.VendorX.Handlers;
+namespace PoctGateway.Analyzers.GeneXpert.Handlers;
 
 public sealed class OBS_Handler : HandlerBase
 {

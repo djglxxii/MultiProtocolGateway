@@ -4,11 +4,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using PoctGateway.Analyzers.GeneXpert;
 using PoctGateway.Core.Engine;
 using PoctGateway.Core.Session;
 using PoctGateway.Core.Vendors;
 using PoctGateway.Host.StubVendors;
-using PoctGateway.VendorX;
 
 var port = args.Length > 0 && int.TryParse(args[0], out var parsedPort) ? parsedPort : 9000;
 
@@ -42,7 +42,7 @@ return;
 static VendorRegistry BuildVendorRegistry(ILogger logger)
 {
     // Ensure at least these assemblies are loaded (optional but can help with lazy loading)
-    _ = typeof(VendorXDevicePack);
+    _ = typeof(GeneXpertDevicePack);
     _ = typeof(Hl7StubDevicePack);
     _ = typeof(AstmStubDevicePack);
     _ = typeof(CustomBinaryDevicePack);
@@ -52,7 +52,7 @@ static VendorRegistry BuildVendorRegistry(ILogger logger)
     var entry = Assembly.GetEntryAssembly();
     if (entry != null)
     {
-        var asm = typeof(VendorXDevicePack).Assembly;
+        var asm = typeof(GeneXpertDevicePack).Assembly;
         var asn = asm.GetName();
         var ass = entry.GetReferencedAssemblies().Where(a => a.FullName == asn.FullName);//.ToList();
         foreach (var name in entry.GetReferencedAssemblies())

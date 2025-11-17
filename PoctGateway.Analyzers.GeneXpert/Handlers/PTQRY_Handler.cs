@@ -1,8 +1,10 @@
-using System.Diagnostics;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Session;
 
-namespace PoctGateway.VendorX.Handlers;
+namespace PoctGateway.Analyzers.GeneXpert.Handlers;
 
 public class PTQRY_Handler : HandlerBase
 {
