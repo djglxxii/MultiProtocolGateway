@@ -12,11 +12,13 @@ public class PTQRY_Handler : HandlerBase
         {
             var doc = ctx.CurrentXDocument;
             var vendorSpecific = doc.Descendants("DCP.vendor_specific").FirstOrDefault();
-            string raw = vendorSpecific?.Value?.Trim() ?? "";
-            var parts = raw.Split('=');
-            var pid = parts[1];
+            if (vendorSpecific != null)
+            {
+                string raw = vendorSpecific?.Value?.Trim() ?? "";
+                var parts = raw.Split('=');
+                var pid = parts[1];
             
-            string xml = @"
+                string xml = @"
 <DTV.CEPHEID.PTQRY>
   <HDR>
     <HDR.message_type V=""DTV.CEPHEID.PTQRY"" SN=""CEPHEID"" SV=""2.0"" />
@@ -33,13 +35,10 @@ public class PTQRY_Handler : HandlerBase
     <PT.birth_date V=""2011-11-01T17:19:10-07:00"" />
   </PT>
 </DTV.CEPHEID.PTQRY>";
-            await SendAsync(xml);
+                await SendAsync(xml);
+            }
         }
         
         await next();
     }
 }
-
-// var vendorSpecific = xdoc
-//     .Descendants("DCP.vendor_specific")
-//     .FirstOrDefault();

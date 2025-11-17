@@ -17,6 +17,9 @@ public sealed class SessionEngine
     private IVendorDevicePack? _boundVendor;
     private List<HandlerBase>? _handlers;
 
+    // Queue for messages requested by handlers via HandlerBase.SendAsync
+    private readonly Queue<string> _pendingOutbound = new();
+
     public SessionContext Context { get; }
 
     public SessionEngine(
@@ -48,6 +51,9 @@ public sealed class SessionEngine
 
         // Reset per-message error state
         Context.ErrorMessage = null;
+
+        // Reset per-message outbound queue
+        _pendingOutbound.Clear();
 
         if (_boundVendor is null)
         {
@@ -82,7 +88,15 @@ public sealed class SessionEngine
 
         await next();
 
+        // First send any acknowledgement
         await SendAcknowledgementIfNeededAsync();
+
+        // Then send all payloads requested by handlers via SendAsync
+        while (_pendingOutbound.Count > 0)
+        {
+            var outbound = _pendingOutbound.Dequeue();
+            await _sendRawAsync(outbound);
+        }
     }
 
     private void BindVendor(string rawPayload)
@@ -120,7 +134,9 @@ public sealed class SessionEngine
             }
 
             var handler = (HandlerBase)Activator.CreateInstance(handlerType)!;
-            handler.SendRawAsync = _sendRawAsync;
+
+            // Instead of sending immediately, queue messages to be sent after ACK.
+            handler.SendRawAsync = EnqueueOutboundAsync;
             handler.LogInfo = _logInfo;
             handler.LogError = _logError;
 
@@ -128,6 +144,17 @@ public sealed class SessionEngine
         }
 
         return handlers;
+    }
+
+    private Task EnqueueOutboundAsync(string raw)
+    {
+        if (raw is null)
+        {
+            throw new ArgumentNullException(nameof(raw));
+        }
+
+        _pendingOutbound.Enqueue(raw);
+        return Task.CompletedTask;
     }
 
     private IReadOnlyList<HandlerBase> ResolveHandlers()
