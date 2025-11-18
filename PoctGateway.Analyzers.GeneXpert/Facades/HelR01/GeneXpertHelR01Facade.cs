@@ -15,7 +15,7 @@ public sealed class GeneXpertHelR01Facade : HelR01Facade
         get
         {
             // Prefer analyzer-specific element if present, otherwise fall back
-            var analyzerId = GetAttrValue(Dev, "DEV.analyzer_id");
+            var analyzerId = GetAttrValue(Dev, "DEV.device_id");
             if (!string.IsNullOrEmpty(analyzerId))
             {
                 return analyzerId;

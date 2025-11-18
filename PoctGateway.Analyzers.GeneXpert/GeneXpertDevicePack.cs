@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using PoctGateway.Analyzers.GeneXpert.Handlers;
+using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Session;
 using PoctGateway.Core.Vendors;
 
@@ -36,6 +38,12 @@ public sealed class GeneXpertDevicePack : IVendorDevicePack
 
     public IReadOnlyCollection<Type> GetHandlerTypes()
     {
-        throw new NotImplementedException();
+        return
+        [
+            typeof(HEL_Handler),
+            typeof(PTQRY_Handler),
+            typeof(OBS_Handler),
+            typeof(OPL_Handler)
+        ];
     }
 }

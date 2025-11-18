@@ -1,52 +1,34 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using PoctGateway.Core.Handlers;
+using PoctGateway.Core.Protocol.Poct1A.EotR01;
+using PoctGateway.Core.Protocol.Poct1A.ObsR01;
 using PoctGateway.Core.Session;
 
 namespace PoctGateway.Analyzers.GeneXpert.Handlers;
 
 public sealed class OBS_Handler : HandlerBase
 {
-    private const string ObsStateKey = "VendorX.ObsState";
-
-    private sealed class ObsState
-    {
-        public bool IsActive { get; set; }
-        public int ObsMessageCount { get; set; }
-    }
-
     public override async Task HandleAsync(SessionContext ctx, Func<Task> next)
     {
-        var state = GetOrCreateState(ctx);
-
         switch (ctx.MessageType)
         {
             case "DST.R01":
-                await HandleDst(ctx, state);
+                await HandleDst(ctx);
                 break;
             case "OBS.R01":
-                HandleObs(ctx, state);
+                HandleObs(ctx);
                 break;
             case "EOT.R01":
-                HandleEot(ctx, state);
+                HandleEot(ctx);
                 break;
         }
 
         await next();
     }
-
-    private static ObsState GetOrCreateState(SessionContext ctx)
-    {
-        if (!ctx.Items.TryGetValue(ObsStateKey, out var obj) || obj is not ObsState state)
-        {
-            state = new ObsState();
-            ctx.Items[ObsStateKey] = state;
-        }
-
-        return state;
-    }
-
-    private async Task HandleDst(SessionContext ctx, ObsState state)
+    
+    private async Task HandleDst(SessionContext ctx)
     {
         var raw = ctx.CurrentRaw;
         if (raw.Contains("DST.new_observations_qty"))
@@ -55,29 +37,23 @@ public sealed class OBS_Handler : HandlerBase
         }
     }
 
-    private void HandleObs(SessionContext ctx, ObsState state)
+    private void HandleObs(SessionContext ctx)
     {
-        if (!state.IsActive)
-        {
-            state.IsActive = true;
-            state.ObsMessageCount = 0;
-            LogInfo?.Invoke($"[OBS] Session {ctx.SessionId}: OBS topic started.");
-        }
-
-        state.ObsMessageCount++;
-        LogInfo?.Invoke($"[OBS] Session {ctx.SessionId}: Received OBS message #{state.ObsMessageCount}.");
+        var doc = ctx.CurrentXDocument!;
+        var facade = new ObsR01Facade(doc);
+        var obs = facade.ToModel();
+        
+        Debugger.Break();
     }
 
-    private void HandleEot(SessionContext ctx, ObsState state)
+    private void HandleEot(SessionContext ctx)
     {
-        if (!state.IsActive)
+        var doc = ctx.CurrentXDocument!;
+        var facade = new EotR01Facade(doc);
+        var eot = facade.ToModel();
+        if (eot.Eot.TopicCode == "OBS")
         {
-            LogInfo?.Invoke($"[EOT] Session {ctx.SessionId}: EOT received but OBS state not active (ignoring).");
-            return;
+            LogInfo?.Invoke($"[EOT] Session {ctx.SessionId}: OBS topic completed.");
         }
-
-        LogInfo?.Invoke($"[OBS] Session {ctx.SessionId}: OBS topic completed after {state.ObsMessageCount} messages.");
-        state.IsActive = false;
-        state.ObsMessageCount = 0;
     }
 }
