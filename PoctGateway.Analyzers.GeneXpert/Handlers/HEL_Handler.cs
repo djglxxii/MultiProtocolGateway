@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Protocol.Poct1A.HelR01;
