@@ -89,8 +89,12 @@ public sealed class SessionEngine
         await next();
 
         // First send any acknowledgement
-        await SendAcknowledgementIfNeededAsync();
-
+        // Only send ACK if not suppressed
+        if (!Context.SuppressAutoAck)
+        {
+            await SendAcknowledgementIfNeededAsync();
+        }
+        
         // Then send all payloads requested by handlers via SendAsync
         while (_pendingOutbound.Count > 0)
         {

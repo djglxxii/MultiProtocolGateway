@@ -3,12 +3,12 @@ using System;
 namespace PoctGateway.Core.Protocol.Poct1A.EotR01;
 // --------------------- POCOs ---------------------
 
-public sealed class EotR01Message
+public sealed class EotMessage
 {
     public EotHeader Header { get; set; }
     public EotSegment Eot { get; set; }
 
-    public EotR01Message()
+    public EotMessage()
     {
         Header = new EotHeader();
         Eot = new EotSegment();

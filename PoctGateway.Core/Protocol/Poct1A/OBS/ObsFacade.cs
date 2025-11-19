@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace PoctGateway.Core.Protocol.Poct1A.ObsR01;
 
-public class ObsR01Facade
+public class ObsFacade
 {
     protected const string ValueAttributeName = "V";
 
@@ -18,7 +18,7 @@ public class ObsR01Facade
     protected readonly XElement Ord;
     protected readonly XElement Rgt;
 
-    public ObsR01Facade(XDocument document)
+    public ObsFacade(XDocument document)
     {
         if (document == null) throw new ArgumentNullException("document");
 
@@ -278,9 +278,9 @@ public class ObsR01Facade
 
     // ----- Map to POCO -----
 
-    public virtual ObsR01Message ToModel()
+    public virtual ObsMessage ToModel()
     {
-        var model = new ObsR01Message();
+        var model = new ObsMessage();
 
         model.Header.ControlId        = ControlId;
         model.Header.VersionId        = VersionId;

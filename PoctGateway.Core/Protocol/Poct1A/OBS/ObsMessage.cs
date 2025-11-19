@@ -1,11 +1,11 @@
 namespace PoctGateway.Core.Protocol.Poct1A.ObsR01;
 
-public sealed class ObsR01Message
+public sealed class ObsMessage
 {
     public ObsHeader Header { get; set; }
     public ObsService Service { get; set; }
 
-    public ObsR01Message()
+    public ObsMessage()
     {
         Header = new ObsHeader();
         Service = new ObsService();

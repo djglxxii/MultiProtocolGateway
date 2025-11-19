@@ -2,7 +2,7 @@ using System.Xml.Linq;
 
 namespace PoctGateway.Core.Protocol.Poct1A.EotR01;
 
-public class EotR01Facade
+public class EotFacade
 {
     protected const string ValueAttributeName = "V";
 
@@ -11,7 +11,7 @@ public class EotR01Facade
     protected readonly XElement Hdr;
     protected readonly XElement Eot;
 
-    public EotR01Facade(XDocument document)
+    public EotFacade(XDocument document)
     {
         if (document == null) throw new ArgumentNullException("document");
 
@@ -52,9 +52,9 @@ public class EotR01Facade
 
     // Map to POCO
 
-    public virtual EotR01Message ToModel()
+    public virtual EotMessage ToModel()
     {
-        var model = new EotR01Message();
+        var model = new EotMessage();
 
         model.Header.ControlId        = ControlId;
         model.Header.VersionId        = VersionId;

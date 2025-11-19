@@ -23,6 +23,13 @@ public sealed class SessionContext
 
     public List<SessionMessage> MessageHistory { get; } = new();
     public IDictionary<string, object> Items { get; } = new Dictionary<string, object>();
+    
+    /// <summary>
+    /// When true, the engine must NOT send the automatic ACK
+    /// for the current inbound message.
+    /// Handlers can toggle this per message.
+    /// </summary>
+    public bool SuppressAutoAck { get; set; } = false;
 
     /// <summary>
     /// Optional error text for this inbound message. When non-empty,

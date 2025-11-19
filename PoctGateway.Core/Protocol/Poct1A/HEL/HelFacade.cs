@@ -2,7 +2,7 @@ using System.Xml.Linq;
 
 namespace PoctGateway.Core.Protocol.Poct1A.HelR01;
 
-public class HelR01Facade
+public class HelFacade
 {
     protected const string ValueAttributeName = "V";
 
@@ -13,7 +13,7 @@ public class HelR01Facade
     protected readonly XElement Dcp;
     protected readonly XElement Dsc;
 
-    public HelR01Facade(XDocument document)
+    public HelFacade(XDocument document)
     {
         if (document == null) throw new ArgumentNullException("document");
 
@@ -115,9 +115,9 @@ public class HelR01Facade
 
     // Facade -> POCO
 
-    public HelR01Message ToModel()
+    public HelMessage ToModel()
     {
-        var model = new HelR01Message();
+        var model = new HelMessage();
 
         model.Header.ControlId        = ControlId;
         model.Header.VersionId        = VersionId;

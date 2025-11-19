@@ -1,11 +1,11 @@
 namespace PoctGateway.Core.Protocol.Poct1A.HelR01;
 
-public sealed class HelR01Message
+public sealed class HelMessage
 {
     public HelHeader Header { get; set; }
     public HelDevice Device { get; set; }
 
-    public HelR01Message()
+    public HelMessage()
     {
         Header = new HelHeader();
         Device = new HelDevice();

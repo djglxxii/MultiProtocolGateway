@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using PoctGateway.Core.Handlers;
+using PoctGateway.Core.Protocol.Poct1A.DST;
 using PoctGateway.Core.Protocol.Poct1A.EotR01;
 using PoctGateway.Core.Protocol.Poct1A.ObsR01;
 using PoctGateway.Core.Session;
@@ -30,17 +31,22 @@ public sealed class OBS_Handler : HandlerBase
     
     private async Task HandleDst(SessionContext ctx)
     {
-        var raw = ctx.CurrentRaw;
-        if (raw.Contains("DST.new_observations_qty"))
+        var doc = ctx.CurrentXDocument!;
+        var facade = new DstFacade(doc);
+        var dst = facade.ToModel();
+        if (int.TryParse(dst.Dst.NewObservationsQuantity, out var newObsQty))
         {
-            await SendAsync(@"<REQ><REQ.request_cd V=""ROBS""/></REQ>");
+            if (newObsQty > 0)
+            {
+                await SendAsync(@"<REQ><REQ.request_cd V=""ROBS""/></REQ>");    
+            }
         }
     }
 
     private void HandleObs(SessionContext ctx)
     {
         var doc = ctx.CurrentXDocument!;
-        var facade = new ObsR01Facade(doc);
+        var facade = new ObsFacade(doc);
         var obs = facade.ToModel();
         
         Debugger.Break();
@@ -49,7 +55,7 @@ public sealed class OBS_Handler : HandlerBase
     private void HandleEot(SessionContext ctx)
     {
         var doc = ctx.CurrentXDocument!;
-        var facade = new EotR01Facade(doc);
+        var facade = new EotFacade(doc);
         var eot = facade.ToModel();
         if (eot.Eot.TopicCode == "OBS")
         {
