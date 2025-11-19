@@ -90,9 +90,9 @@ public class DstFacade
 
     // ----- Map to POCO -----
 
-    public virtual DstR01Message ToModel()
+    public virtual DstMessage ToModel()
     {
-        var model = new DstR01Message();
+        var model = new DstMessage();
 
         model.Header.ControlId        = ControlId;
         model.Header.VersionId        = VersionId;

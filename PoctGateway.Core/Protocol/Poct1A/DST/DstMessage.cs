@@ -1,11 +1,11 @@
 namespace PoctGateway.Core.Protocol.Poct1A.DST;
 
-public sealed class DstR01Message
+public sealed class DstMessage
 {
     public DstHeader Header { get; set; }
     public DstSegment Dst { get; set; }
 
-    public DstR01Message()
+    public DstMessage()
     {
         Header = new DstHeader();
         Dst = new DstSegment();

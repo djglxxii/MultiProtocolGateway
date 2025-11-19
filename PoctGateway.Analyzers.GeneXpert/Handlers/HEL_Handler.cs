@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using PoctGateway.Core.Handlers;
+using PoctGateway.Core.Helpers;
 using PoctGateway.Core.Protocol.Poct1A.HelR01;
 using PoctGateway.Core.Session;
 
@@ -12,9 +14,8 @@ public sealed class HEL_Handler : HandlerBase
     {
         if (ctx.MessageType == "HEL.R01")
         {
-            var doc = ctx.CurrentXDocument!;
-            var facade = new HelFacade(doc);
-            var hel = facade.ToModel();
+            var hel = ctx.GetModel<HelMessage>();
+            Debugger.Break();
         }
         
         await next();

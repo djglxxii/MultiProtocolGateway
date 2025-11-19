@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using PoctGateway.Core.Session;
 
 namespace PoctGateway.Core.Handlers;
