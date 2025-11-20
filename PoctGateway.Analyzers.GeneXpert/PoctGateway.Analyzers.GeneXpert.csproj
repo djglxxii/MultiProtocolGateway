@@ -9,4 +9,22 @@
       <ProjectReference Include="..\PoctGateway.Core\PoctGateway.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Data\opl_output_chunk_1.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\opl_output_chunk_2.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\opl_output_chunk_3.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\opl_output_chunk_4.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\opl_output_chunk_5.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

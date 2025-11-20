@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Helpers;
@@ -15,7 +14,6 @@ public sealed class HEL_Handler : HandlerBase
         if (ctx.MessageType == "HEL.R01")
         {
             var hel = ctx.GetModel<HelMessage>();
-            Debugger.Break();
         }
         
         await next();
