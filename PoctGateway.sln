@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoctGateway.Host", "PoctGat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoctGateway.Analyzers.GeneXpert", "PoctGateway.Analyzers.GeneXpert\PoctGateway.Analyzers.GeneXpert.csproj", "{562C6C37-8526-4915-8F1E-4498C05C5505}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoctGateway.Core.Tests", "PoctGateway.Core.Tests\PoctGateway.Core.Tests.csproj", "{AEEA210F-7860-47DA-8EA0-12A8DB92914C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{562C6C37-8526-4915-8F1E-4498C05C5505}.Release|x64.Build.0 = Release|Any CPU
 		{562C6C37-8526-4915-8F1E-4498C05C5505}.Release|x86.ActiveCfg = Release|Any CPU
 		{562C6C37-8526-4915-8F1E-4498C05C5505}.Release|x86.Build.0 = Release|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Debug|x64.Build.0 = Debug|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Debug|x86.Build.0 = Debug|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Release|x64.ActiveCfg = Release|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Release|x64.Build.0 = Release|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Release|x86.ActiveCfg = Release|Any CPU
+		{AEEA210F-7860-47DA-8EA0-12A8DB92914C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

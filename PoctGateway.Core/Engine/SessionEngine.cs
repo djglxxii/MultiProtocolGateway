@@ -1,5 +1,6 @@
-using System.Reflection;
+using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Protocol.Poct1A;
@@ -8,7 +9,7 @@ using PoctGateway.Core.Vendors;
 
 namespace PoctGateway.Core.Engine;
 
-public sealed class SessionEngine
+public sealed partial class SessionEngine
 {
     private readonly VendorRegistry _vendorRegistry;
     private readonly Func<string, Task> _sendRawAsync;
@@ -18,9 +19,17 @@ public sealed class SessionEngine
 
     private IVendorDevicePack? _boundVendor;
     private List<HandlerBase>? _handlers;
-    private readonly Queue<string> _pendingOutbound = new();
+    
+    // Persistent queue of outbound messages (not reset per inbound message)
+    private readonly Queue<OutboundMessage> _pendingOutbound = new();
+    
+    // The message currently awaiting acknowledgement (null if none)
+    private OutboundMessage? _currentOutbound;
 
     private int _nextOutboundControlId;
+
+    // Default POCT1A datetime format
+    private const string DefaultDateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss.ffK";
 
     private int GetNextOutboundControlId()
         => Interlocked.Increment(ref _nextOutboundControlId);
@@ -59,8 +68,7 @@ public sealed class SessionEngine
         // Reset per-message error state
         Context.ErrorMessage = null;
 
-        // Reset per-message outbound queue
-        _pendingOutbound.Clear();
+        // NOTE: We no longer reset _pendingOutbound here - it persists across messages
 
         if (_boundVendor is null)
         {
@@ -78,6 +86,15 @@ public sealed class SessionEngine
             Direction = MessageDirection.DeviceToServer,
             RawPayload = rawPayload
         });
+
+        // Handle ACK messages from device
+        if (Context.MessageType?.StartsWith("ACK", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            await HandleInboundAckAsync();
+            // After handling ACK, try to send next queued message
+            await TrySendNextOutboundAsync();
+            return;
+        }
 
         var handlers = ResolveHandlers();
         if (handlers.Count == 0)
@@ -101,12 +118,121 @@ public sealed class SessionEngine
         {
             await SendAcknowledgementIfNeededAsync();
         }
-        
-        // Then send all payloads requested by handlers via SendAsync
-        while (_pendingOutbound.Count > 0)
+
+        // Then try to send next outbound message if we're not waiting for an ACK
+        await TrySendNextOutboundAsync();
+    }
+
+    /// <summary>
+    /// Handles an inbound ACK.R01 message from the device.
+    /// Correlates with _currentOutbound and notifies the handler.
+    /// </summary>
+    private Task HandleInboundAckAsync()
+    {
+        if (Context.CurrentXDocument?.Root is null)
         {
-            var outbound = _pendingOutbound.Dequeue();
-            await _sendRawAsync(outbound);
+            _logInfo($"[ACK] Session {Context.SessionId}: Received ACK but could not parse XML.");
+            return Task.CompletedTask;
+        }
+
+        var ackElement = Context.CurrentXDocument.Root.Element("ACK");
+        if (ackElement is null)
+        {
+            _logInfo($"[ACK] Session {Context.SessionId}: Received ACK message without ACK element.");
+            return Task.CompletedTask;
+        }
+
+        var ackControlIdStr = ackElement.Element("ACK.ack_control_id")?.Attribute("V")?.Value;
+        var typeCd = ackElement.Element("ACK.type_cd")?.Attribute("V")?.Value;
+        var errorMsg = ackElement.Element("ACK.error_msg")?.Attribute("V")?.Value;
+
+        if (string.IsNullOrWhiteSpace(ackControlIdStr) || !int.TryParse(ackControlIdStr, out var ackControlId))
+        {
+            _logInfo($"[ACK] Session {Context.SessionId}: Could not parse ACK.ack_control_id.");
+            return Task.CompletedTask;
+        }
+
+        _logInfo($"[ACK] Session {Context.SessionId}: Received {typeCd ?? "unknown"} for control ID {ackControlId}.");
+
+        if (_currentOutbound is null)
+        {
+            _logInfo($"[ACK] Session {Context.SessionId}: Received ACK but no message awaiting acknowledgement.");
+            return Task.CompletedTask;
+        }
+
+        if (_currentOutbound.ControlId != ackControlId)
+        {
+            _logError($"[ACK] Session {Context.SessionId}: ACK control ID {ackControlId} does not match pending message control ID {_currentOutbound.ControlId}.");
+            return Task.CompletedTask;
+        }
+
+        // Notify the listener
+        var listener = _currentOutbound.AckListener;
+        if (listener is not null)
+        {
+            if (string.Equals(typeCd, "AA", StringComparison.OrdinalIgnoreCase))
+            {
+                listener.OnOutboundAcknowledged(ackControlId);
+            }
+            else if (string.Equals(typeCd, "AE", StringComparison.OrdinalIgnoreCase))
+            {
+                listener.OnOutboundError(ackControlId, errorMsg);
+            }
+            else
+            {
+                // Unknown type code - treat as error
+                listener.OnOutboundError(ackControlId, $"Unknown ACK type: {typeCd}");
+            }
+        }
+
+        // Clear the current outbound - we can now send the next one
+        _currentOutbound = null;
+        
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Attempts to send the next outbound message if we're not waiting for an ACK.
+    /// </summary>
+    private async Task TrySendNextOutboundAsync()
+    {
+        // Only send if we're not waiting for an ACK
+        if (_currentOutbound is not null)
+        {
+            return;
+        }
+
+        if (_pendingOutbound.Count == 0)
+        {
+            return;
+        }
+
+        var outbound = _pendingOutbound.Dequeue();
+        _currentOutbound = outbound;
+
+        _logInfo($"[SEND] Session {Context.SessionId}: Sending message with control ID {outbound.ControlId}.");
+
+        // Add to message history
+        Context.MessageHistory.Add(new SessionMessage
+        {
+            MessageType = TryGetMessageType(outbound.Payload),
+            Direction = MessageDirection.ServerToDevice,
+            RawPayload = outbound.Payload
+        });
+
+        await _sendRawAsync(outbound.Payload);
+    }
+
+    private static string TryGetMessageType(string payload)
+    {
+        try
+        {
+            var doc = XDocument.Parse(payload);
+            return doc.Root?.Name.LocalName ?? "Unknown";
+        }
+        catch
+        {
+            return "Unknown";
         }
     }
 
@@ -157,16 +283,135 @@ public sealed class SessionEngine
         return handlers;
     }
 
-    private Task EnqueueOutboundAsync(string raw)
+    private Task EnqueueOutboundAsync(string raw, IOutboundAckListener? listener)
     {
         if (raw is null)
         {
             throw new ArgumentNullException(nameof(raw));
         }
 
-        _pendingOutbound.Enqueue(raw);
+        // Process the payload: replace tokens and/or inject HDR
+        var (processedPayload, controlId) = ProcessOutboundPayload(raw);
+        
+        var outboundMessage = new OutboundMessage(processedPayload, controlId, listener);
+        _pendingOutbound.Enqueue(outboundMessage);
+        
+        _logInfo($"[QUEUE] Session {Context.SessionId}: Queued message with control ID {controlId}. Queue depth: {_pendingOutbound.Count}.");
+        
         return Task.CompletedTask;
     }
+
+    /// <summary>
+    /// Processes an outbound payload by:
+    /// 1. Replacing tokens ({{ control_id }}, {{ datetime_now[:format] }})
+    /// 2. Injecting HDR element if not present
+    /// Returns the processed payload and the assigned control ID.
+    /// </summary>
+    private (string ProcessedPayload, int ControlId) ProcessOutboundPayload(string raw)
+    {
+        var controlId = GetNextOutboundControlId();
+        var now = DateTimeOffset.Now;
+        
+        // Check if payload contains tokens
+        var hasTokens = raw.Contains("{{") && raw.Contains("}}");
+        
+        if (hasTokens)
+        {
+            // Replace tokens in the payload
+            var processed = ReplaceTokens(raw, controlId, now);
+            return (processed, controlId);
+        }
+        
+        // Try to parse as XML
+        var trimmed = raw.Trim();
+        if (!trimmed.StartsWith("<", StringComparison.Ordinal))
+        {
+            // Not XML, return as-is
+            return (raw, controlId);
+        }
+        
+        try
+        {
+            var doc = XDocument.Parse(trimmed, LoadOptions.PreserveWhitespace);
+            
+            if (doc.Root is null)
+            {
+                return (raw, controlId);
+            }
+            
+            var existingHdr = doc.Root.Element("HDR");
+            
+            if (existingHdr is not null)
+            {
+                // HDR exists - check if it has tokens to replace
+                var hdrString = existingHdr.ToString();
+                if (hdrString.Contains("{{") && hdrString.Contains("}}"))
+                {
+                    // Replace tokens in the whole document
+                    var processed = ReplaceTokens(doc.ToString(SaveOptions.DisableFormatting), controlId, now);
+                    return (processed, controlId);
+                }
+                
+                // HDR exists with no tokens - return as-is
+                return (raw, controlId);
+            }
+            
+            // No HDR - inject one
+            var messageType = doc.Root.Name.LocalName;
+            var creationDttm = now.ToString(DefaultDateTimeFormat, CultureInfo.InvariantCulture);
+            
+            var hdr = new XElement("HDR",
+                new XElement("HDR.message_type", new XAttribute("V", messageType)),
+                new XElement("HDR.control_id", new XAttribute("V", controlId.ToString(CultureInfo.InvariantCulture))),
+                new XElement("HDR.version_id", new XAttribute("V", "POCT1")),
+                new XElement("HDR.creation_dttm", new XAttribute("V", creationDttm))
+            );
+            
+            // Insert HDR as first child
+            doc.Root.AddFirst(hdr);
+            
+            return (doc.ToString(SaveOptions.DisableFormatting), controlId);
+        }
+        catch
+        {
+            // Failed to parse XML - return as-is
+            return (raw, controlId);
+        }
+    }
+
+    /// <summary>
+    /// Replaces tokens in the payload:
+    /// - {{ control_id }} -> the control ID
+    /// - {{ datetime_now }} -> current datetime in default format
+    /// - {{ datetime_now:format }} -> current datetime in specified format
+    /// </summary>
+    private static string ReplaceTokens(string payload, int controlId, DateTimeOffset now)
+    {
+        // Replace {{ control_id }}
+        payload = ControlIdTokenRegex().Replace(payload, controlId.ToString(CultureInfo.InvariantCulture));
+        
+        // Replace {{ datetime_now }} with default format
+        payload = DateTimeNowDefaultRegex().Replace(payload, 
+            now.ToString(DefaultDateTimeFormat, CultureInfo.InvariantCulture));
+        
+        // Replace {{ datetime_now:format }}
+        payload = DateTimeNowFormatRegex().Replace(payload, match =>
+        {
+            var format = match.Groups["format"].Value;
+            return now.ToString(format, CultureInfo.InvariantCulture);
+        });
+        
+        return payload;
+    }
+
+    [GeneratedRegex(@"\{\{\s*control_id\s*\}\}", RegexOptions.IgnoreCase)]
+    private static partial Regex ControlIdTokenRegex();
+    
+    [GeneratedRegex(@"\{\{\s*datetime_now\s*\}\}", RegexOptions.IgnoreCase)]
+    private static partial Regex DateTimeNowDefaultRegex();
+    
+    [GeneratedRegex(@"\{\{\s*datetime_now\s*:\s*(?<format>[^}]+)\s*\}\}", RegexOptions.IgnoreCase)]
+    private static partial Regex DateTimeNowFormatRegex();
 
     private IReadOnlyList<HandlerBase> ResolveHandlers()
     {
@@ -249,6 +494,14 @@ public sealed class SessionEngine
         _logInfo(
             $"[ACK] Session {Context.SessionId}: Sending {(string.IsNullOrWhiteSpace(errorMessage) ? "ACK (AA)" : "NAK (AE)")} " +
             $"for inbound control ID '{inboundControlId}', outbound control ID '{outboundControlId}'.");
+
+        // Add ACK to message history
+        Context.MessageHistory.Add(new SessionMessage
+        {
+            MessageType = "ACK.R01",
+            Direction = MessageDirection.ServerToDevice,
+            RawPayload = ackString
+        });
 
         await _sendRawAsync(ackString);
     }
