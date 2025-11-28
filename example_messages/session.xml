@@ -1,0 +1,72 @@
+<Session>
+<HEL.R01>
+  <HDR>
+    <HDR.control_id V="237887" />
+    <HDR.version_id V="POCT01" />
+    <HDR.creation_dttm V="2025-11-18T13:55:28Z" />
+  </HDR>
+  <DEV>
+    <DEV.device_id V="00-22-48-21-5C-F4" />
+    <DEV.vendor_id V="CPHD" />
+    <DEV.model_id V="GeneXpert Xpress" />
+    <DEV.serial_id V="6542-1078-4705" />
+    <DEV.manufacturer_name V="Cepheid" />
+    <DEV.sw_version V="6.4" />
+    <DEV.device_name V="TestXpress Name" />
+    <DCP>
+      <DCP.application_timeout V="60" />
+    </DCP>
+    <DSC>
+      <DSC.connection_profile_cd V="SA" />
+      <DSC.topics_supported_cd V="OP_LST" />
+      <DSC.topics_supported_cd V="DTV" />
+      <DSC.directives_supported_cd V="UVSET" />
+      <DSC.max_message_sz V="131072" />
+    </DSC>
+  </DEV>
+</HEL.R01>
+
+<DST.R01>
+  <HDR>
+    <HDR.control_id V="237888" />
+    <HDR.version_id V="POCT01" />
+    <HDR.creation_dttm V="2025-11-18T13:55:28Z" />
+  </HDR>
+  <DST>
+    <DST.status_dttm V="2025-11-18T13:55:28Z" />
+    <DST.new_observations_qty V="0" />
+    <DST.condition_cd SN="CEPHEID" SV="1.0" V="R" />
+    <DST.observations_update_dttm V="2025-11-17T20:11:36Z" />
+    <DST.operators_update_dttm V="2025-11-18T12:26:18Z" />
+  </DST>
+</DST.R01>
+
+<ACK.R01>
+  <HDR>
+    <HDR.message_type V="ACK.R01" />
+    <HDR.control_id V="2" />
+    <HDR.version_id V="POCT1" />
+    <HDR.creation_dttm V="2025-11-18T08:55:28.33-05:00" />
+  </HDR>
+  <ACK>
+    <ACK.type_cd V="AA" />
+    <ACK.ack_control_id V="237888" />
+  </ACK>
+</ACK.R01>
+
+<DTV.CEPHEID.UVSET>
+  <HDR>
+    <HDR.message_type V="DTV.CEPHEID.UVSET" SN="CEPHEID" SV="2.0" />
+    <HDR.control_id V="3" />
+    <HDR.version_id V="POCT1" />
+    <HDR.creation_dttm V="2025-11-18T08:55:28.58-05:00" />
+  </HDR>
+  <DTV>
+    <DTV.command_cd V="UVSET" SN="CEPHEID" SV="2.0" />
+  </DTV>
+  <UVSET>
+    <UVSET.setting V="0" />
+  </UVSET>
+</DTV.CEPHEID.UVSET>
+
+</Session>
