@@ -6,6 +6,7 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using PoctGateway.Analyzers.GeneXpert;
 using PoctGateway.Core.Engine;
+using PoctGateway.Core.Protocol.Poct1A;
 using PoctGateway.Core.Session;
 using PoctGateway.Core.Vendors;
 using PoctGateway.Host.StubVendors;
@@ -152,7 +153,9 @@ static async Task HandleConnectionAsync(TcpClient client, VendorRegistry vendorR
             });
         },
         logInfo: message => logger.LogInformation("{Message}", message),
-        logError: message => logger.LogError("{Message}", message));
+        logError: message => logger.LogError("{Message}", message),
+        new PoctMessageFactory()
+        );
 
     var buffer = new byte[8192];
    

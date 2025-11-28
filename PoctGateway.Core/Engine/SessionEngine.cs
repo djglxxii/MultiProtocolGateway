@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 using PoctGateway.Core.Handlers;
+using PoctGateway.Core.Protocol.Poct1A;
 using PoctGateway.Core.Session;
 using PoctGateway.Core.Vendors;
 
@@ -13,12 +14,16 @@ public sealed class SessionEngine
     private readonly Func<string, Task> _sendRawAsync;
     private readonly Action<string> _logInfo;
     private readonly Action<string> _logError;
+    private readonly IPoctMessageFactory _messageFactory;
 
     private IVendorDevicePack? _boundVendor;
     private List<HandlerBase>? _handlers;
-
-    // Queue for messages requested by handlers via HandlerBase.SendAsync
     private readonly Queue<string> _pendingOutbound = new();
+
+    private int _nextOutboundControlId;
+
+    private int GetNextOutboundControlId()
+        => Interlocked.Increment(ref _nextOutboundControlId);
 
     public SessionContext Context { get; }
 
@@ -27,13 +32,15 @@ public sealed class SessionEngine
         VendorRegistry vendorRegistry,
         Func<string, Task> sendRawAsync,
         Action<string> logInfo,
-        Action<string> logError)
+        Action<string> logError,
+        IPoctMessageFactory messageFactory)
     {
         Context = context ?? throw new ArgumentNullException(nameof(context));
         _vendorRegistry = vendorRegistry ?? throw new ArgumentNullException(nameof(vendorRegistry));
         _sendRawAsync = sendRawAsync ?? (_ => Task.CompletedTask);
         _logInfo = logInfo ?? (_ => { });
         _logError = logError ?? (_ => { });
+        _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
     }
 
     public async Task ProcessInboundAsync(string rawPayload)
@@ -204,7 +211,6 @@ public sealed class SessionEngine
     /// </summary>
     private async Task SendAcknowledgementIfNeededAsync()
     {
-        // Only XML messages can carry the HDR control ID in this model.
         if (Context.CurrentXDocument is null)
         {
             return;
@@ -212,37 +218,37 @@ public sealed class SessionEngine
 
         var messageType = Context.MessageType ?? string.Empty;
 
-        // Do not ACK an ACK to avoid loops.
         if (messageType.StartsWith("ACK", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        // <HDR><HDR.control_id V="..." /></HDR>
         var hdr = Context.CurrentXDocument.Root?.Element("HDR");
-        var controlId = hdr?.Element("HDR.control_id")?.Attribute("V")?.Value;
-        if (string.IsNullOrWhiteSpace(controlId))
+        var inboundControlId = hdr?.Element("HDR.control_id")?.Attribute("V")?.Value;
+        if (string.IsNullOrWhiteSpace(inboundControlId))
         {
+            _logInfo($"[ACK] Session {Context.SessionId}: Skipping ACK – no HDR.control_id found.");
             return;
         }
 
-        var hasError = !string.IsNullOrWhiteSpace(Context.ErrorMessage);
-        var ackCode = hasError ? "AE" : "AA";
+        var versionId =
+            hdr?.Element("HDR.version_id")?.Attribute("V")?.Value
+            ?? "POCT1";
 
-        var ackElement = new XElement("ACK",
-            new XElement("ACK.type_cd",        new XAttribute("V", ackCode)),
-            new XElement("ACK.ack_control_id", new XAttribute("V", controlId)));
+        var outboundControlId = GetNextOutboundControlId();
+        var errorMessage = Context.ErrorMessage;
 
-        if (hasError)
-        {
-            ackElement.Add(
-                new XElement("ACK.error_msg", new XAttribute("V", Context.ErrorMessage!)));
-        }
+        var ackDocument = _messageFactory.CreateAck(
+            inboundControlId,
+            versionId,
+            outboundControlId,
+            errorMessage);
 
-        var ackString = ackElement.ToString(SaveOptions.DisableFormatting);
+        var ackString = ackDocument.ToString(SaveOptions.DisableFormatting);
 
-        _logInfo?.Invoke(
-            $"[ACK] Session {Context.SessionId}: Sending {(hasError ? "NAK (AE)" : "ACK (AA)")} for control ID '{controlId}'.");
+        _logInfo(
+            $"[ACK] Session {Context.SessionId}: Sending {(string.IsNullOrWhiteSpace(errorMessage) ? "ACK (AA)" : "NAK (AE)")} " +
+            $"for inbound control ID '{inboundControlId}', outbound control ID '{outboundControlId}'.");
 
         await _sendRawAsync(ackString);
     }
