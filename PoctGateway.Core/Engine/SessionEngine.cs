@@ -176,7 +176,11 @@ public sealed partial class SessionEngine
             }
             else if (string.Equals(typeCd, "AE", StringComparison.OrdinalIgnoreCase))
             {
-                listener.OnOutboundError(ackControlId, errorMsg);
+                var abort = listener.OnOutboundError(ackControlId, errorMsg);
+                if (abort)
+                {
+                    AbortPendingMessagesForHandler(listener);
+                }
             }
             else
             {
@@ -504,5 +508,36 @@ public sealed partial class SessionEngine
         });
 
         await _sendRawAsync(ackString);
+    }
+
+    private void AbortPendingMessagesForHandler(IOutboundAckListener handler)
+    {
+        var messagesToKeep = new Queue<OutboundMessage>();
+        var abortedCount = 0;
+
+        while (_pendingOutbound.Count > 0)
+        {
+            var message = _pendingOutbound.Dequeue();
+
+            if (ReferenceEquals(message.AckListener, handler))
+            {
+                abortedCount++;
+                _logInfo($"[ABORT] Session {Context.SessionId}: Aborted message with control ID {message.ControlId} for handler.");
+            }
+            else
+            {
+                messagesToKeep.Enqueue(message);
+            }
+        }
+
+        while (messagesToKeep.Count > 0)
+        {
+            _pendingOutbound.Enqueue(messagesToKeep.Dequeue());
+        }
+
+        if (abortedCount > 0)
+        {
+            _logInfo($"[ABORT] Session {Context.SessionId}: Aborted {abortedCount} pending message(s) for handler. Queue depth: {_pendingOutbound.Count}.");
+        }
     }
 }

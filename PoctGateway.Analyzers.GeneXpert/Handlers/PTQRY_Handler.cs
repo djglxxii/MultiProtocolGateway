@@ -59,8 +59,9 @@ public sealed class PTQRY_Handler : HandlerBase, IOutboundAckListener
         LogInfo?.Invoke($"[PTQRY] Patient query response with control ID {controlId} was acknowledged.");
     }
 
-    public void OnOutboundError(int controlId, string? errorMessage)
+    public bool OnOutboundError(int controlId, string? errorMessage)
     {
         LogError?.Invoke($"[PTQRY] Patient query response with control ID {controlId} was rejected: {errorMessage ?? "No error message"}");
+        return true;
     }
 }

@@ -17,5 +17,5 @@ public interface IOutboundAckListener
     /// </summary>
     /// <param name="controlId">The control ID of the rejected message.</param>
     /// <param name="errorMessage">The error message from the device, if any.</param>
-    void OnOutboundError(int controlId, string? errorMessage);
+    bool OnOutboundError(int controlId, string? errorMessage);
 }

@@ -288,7 +288,11 @@ public class QueueWithListenerHandler : HandlerBase, IOutboundAckListener
     }
 
     public void OnOutboundAcknowledged(int controlId) { }
-    public void OnOutboundError(int controlId, string? errorMessage) { }
+
+    public bool OnOutboundError(int controlId, string? errorMessage)
+    {
+        return true;
+    }
 }
 
 public class TestAckListener : IOutboundAckListener
@@ -301,8 +305,9 @@ public class TestAckListener : IOutboundAckListener
         AcknowledgedControlIds.Add(controlId);
     }
 
-    public void OnOutboundError(int controlId, string? errorMessage)
+    public bool OnOutboundError(int controlId, string? errorMessage)
     {
         Errors.Add((controlId, errorMessage));
+        return true;
     }
 }

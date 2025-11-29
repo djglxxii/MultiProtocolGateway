@@ -49,8 +49,9 @@ public sealed class OPL_Handler : HandlerBase, IOutboundAckListener
     /// <summary>
     /// Called when the device rejects an OPL message.
     /// </summary>
-    public void OnOutboundError(int controlId, string? errorMessage)
+    public bool OnOutboundError(int controlId, string? errorMessage)
     {
         LogError?.Invoke($"[OPL] OPL message with control ID {controlId} was rejected: {errorMessage ?? "No error message"}");
+        return true;
     }
 }
