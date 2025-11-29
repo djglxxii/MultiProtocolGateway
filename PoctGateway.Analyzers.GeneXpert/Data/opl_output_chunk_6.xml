@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<EOT.R01>
+  <HDR>
+    <HDR.control_id V="{{ control_id }}" />
+    <HDR.version_id V="POCT1" />
+    <HDR.creation_dttm V="{{ datetime_now }}" />
+  </HDR>
+  <EOT>
+    <EOT.topic_cd V="OPL" />
+    <EOT.update_dttm V="{{ datetime_now }}" />
+  </EOT>
+</EOT.R01>

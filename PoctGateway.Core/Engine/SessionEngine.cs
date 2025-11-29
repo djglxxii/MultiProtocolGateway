@@ -19,10 +19,10 @@ public sealed partial class SessionEngine
 
     private IVendorDevicePack? _boundVendor;
     private List<HandlerBase>? _handlers;
-    
+
     // Persistent queue of outbound messages (not reset per inbound message)
     private readonly Queue<OutboundMessage> _pendingOutbound = new();
-    
+
     // The message currently awaiting acknowledgement (null if none)
     private OutboundMessage? _currentOutbound;
 
@@ -78,7 +78,7 @@ public sealed partial class SessionEngine
         Context.CurrentRaw = rawPayload;
         Context.CurrentXDocument = TryParseXml(rawPayload);
         Context.MessageType = Context.CurrentXDocument?.Root?.Name.LocalName
-            ?? DetermineNonXmlMessageType(rawPayload);
+                              ?? DetermineNonXmlMessageType(rawPayload);
 
         Context.MessageHistory.Add(new SessionMessage
         {
@@ -162,7 +162,8 @@ public sealed partial class SessionEngine
 
         if (_currentOutbound.ControlId != ackControlId)
         {
-            _logError($"[ACK] Session {Context.SessionId}: ACK control ID {ackControlId} does not match pending message control ID {_currentOutbound.ControlId}.");
+            _logError(
+                $"[ACK] Session {Context.SessionId}: ACK control ID {ackControlId} does not match pending message control ID {_currentOutbound.ControlId}.");
             return Task.CompletedTask;
         }
 
@@ -191,7 +192,7 @@ public sealed partial class SessionEngine
 
         // Clear the current outbound - we can now send the next one
         _currentOutbound = null;
-        
+
         return Task.CompletedTask;
     }
 
@@ -266,12 +267,14 @@ public sealed partial class SessionEngine
         {
             if (!typeof(HandlerBase).IsAssignableFrom(handlerType))
             {
-                throw new InvalidOperationException($"Handler type '{handlerType.FullName}' does not inherit HandlerBase.");
+                throw new InvalidOperationException(
+                    $"Handler type '{handlerType.FullName}' does not inherit HandlerBase.");
             }
 
             if (handlerType.GetConstructor(Type.EmptyTypes) is null)
             {
-                throw new InvalidOperationException($"Handler type '{handlerType.FullName}' must have a public parameterless constructor.");
+                throw new InvalidOperationException(
+                    $"Handler type '{handlerType.FullName}' must have a public parameterless constructor.");
             }
 
             var handler = (HandlerBase)Activator.CreateInstance(handlerType)!;
@@ -296,12 +299,13 @@ public sealed partial class SessionEngine
 
         // Process the payload: replace tokens and/or inject HDR
         var (processedPayload, controlId) = ProcessOutboundPayload(raw);
-        
+
         var outboundMessage = new OutboundMessage(processedPayload, controlId, listener);
         _pendingOutbound.Enqueue(outboundMessage);
-        
-        _logInfo($"[QUEUE] Session {Context.SessionId}: Queued message with control ID {controlId}. Queue depth: {_pendingOutbound.Count}.");
-        
+
+        _logInfo(
+            $"[QUEUE] Session {Context.SessionId}: Queued message with control ID {controlId}. Queue depth: {_pendingOutbound.Count}.");
+
         return Task.CompletedTask;
     }
 
@@ -313,75 +317,117 @@ public sealed partial class SessionEngine
     /// </summary>
     private (string ProcessedPayload, int ControlId) ProcessOutboundPayload(string raw)
     {
-        var controlId = GetNextOutboundControlId();
         var now = DateTimeOffset.Now;
-        
-        // Check if payload contains tokens
         var hasTokens = raw.Contains("{{") && raw.Contains("}}");
-        
-        if (hasTokens)
-        {
-            // Replace tokens in the payload
-            var processed = ReplaceTokens(raw, controlId, now);
-            return (processed, controlId);
-        }
-        
+
         // Try to parse as XML
-        var trimmed = raw.Trim();
-        if (!trimmed.StartsWith("<", StringComparison.Ordinal))
-        {
-            // Not XML, return as-is
-            return (raw, controlId);
-        }
-        
+        XDocument? doc = null;
         try
         {
-            var doc = XDocument.Parse(trimmed, LoadOptions.PreserveWhitespace);
-            
-            if (doc.Root is null)
-            {
-                return (raw, controlId);
-            }
-            
-            var existingHdr = doc.Root.Element("HDR");
-            
-            if (existingHdr is not null)
-            {
-                // HDR exists - check if it has tokens to replace
-                var hdrString = existingHdr.ToString();
-                if (hdrString.Contains("{{") && hdrString.Contains("}}"))
-                {
-                    // Replace tokens in the whole document
-                    var processed = ReplaceTokens(doc.ToString(SaveOptions.DisableFormatting), controlId, now);
-                    return (processed, controlId);
-                }
-                
-                // HDR exists with no tokens - return as-is
-                return (raw, controlId);
-            }
-            
-            // No HDR - inject one
-            var messageType = doc.Root.Name.LocalName;
-            var creationDttm = now.ToString(DefaultDateTimeFormat, CultureInfo.InvariantCulture);
-            
-            var hdr = new XElement("HDR",
-                new XElement("HDR.message_type", new XAttribute("V", messageType)),
-                new XElement("HDR.control_id", new XAttribute("V", controlId.ToString(CultureInfo.InvariantCulture))),
-                new XElement("HDR.version_id", new XAttribute("V", "POCT1")),
-                new XElement("HDR.creation_dttm", new XAttribute("V", creationDttm))
-            );
-            
-            // Insert HDR as first child
-            doc.Root.AddFirst(hdr);
-            
-            return (doc.ToString(SaveOptions.DisableFormatting), controlId);
+            doc = XDocument.Parse(raw, LoadOptions.PreserveWhitespace);
         }
         catch
         {
-            // Failed to parse XML - return as-is
-            return (raw, controlId);
+            doc = null;
         }
+
+        // 1. NON-XML → engine must own the control ID
+        if (doc is null || doc.Root is null)
+        {
+            var controlId = GetNextOutboundControlId();
+
+            var processed = hasTokens
+                ? ReplaceTokens(raw, controlId, now)
+                : raw;
+
+            return (processed, controlId);
+        }
+
+        var root = doc.Root;
+        var hdr = root.Element("HDR");
+
+        // 2. NO HDR → create engine-owned HDR
+        if (hdr is null)
+        {
+            var controlId = GetNextOutboundControlId();
+            var messageType = root.Name.LocalName;
+
+            var hdrElement = new XElement(
+                "HDR",
+                new XElement("HDR.message_type", new XAttribute("V", messageType)),
+                new XElement("HDR.control_id", new XAttribute("V", controlId.ToString(CultureInfo.InvariantCulture))),
+                new XElement("HDR.version_id", new XAttribute("V", "POCT1")),
+                new XElement("HDR.creation_dttm", new XAttribute("V",
+                    now.ToString("yyyy-MM-dd'T'HH:mm:ss.ffK", CultureInfo.InvariantCulture)))
+            );
+
+            root.AddFirst(hdrElement);
+
+            var xmlString = doc.ToString(SaveOptions.DisableFormatting);
+
+            if (xmlString.Contains("{{") && xmlString.Contains("}}"))
+                xmlString = ReplaceTokens(xmlString, controlId, now);
+
+            return (xmlString, controlId);
+        }
+
+        // 3. HDR EXISTS
+        var hdrString = hdr.ToString();
+        var hdrHasTokens = hdrString.Contains("{{") && hdrString.Contains("}}");
+
+        // 3A. HDR contains tokens → engine owns control ID
+        if (hdrHasTokens)
+        {
+            var controlId = GetNextOutboundControlId();
+
+            var processed = ReplaceTokens(
+                doc.ToString(SaveOptions.DisableFormatting),
+                controlId,
+                now);
+
+            return (processed, controlId);
+        }
+
+        // 3B. HDR has NO tokens → vendor may own control ID
+        var controlIdElement = hdr.Element("HDR.control_id");
+        var controlIdAttr = controlIdElement?.Attribute("V");
+
+        if (controlIdAttr is not null &&
+            int.TryParse(controlIdAttr.Value, NumberStyles.Integer, CultureInfo.InvariantCulture,
+                out var vendorControlId))
+        {
+            // Vendor-supplied ID is valid → vendor owns control ID
+            var xmlString = doc.ToString(SaveOptions.DisableFormatting);
+
+            if (xmlString.Contains("{{") && xmlString.Contains("}}"))
+                xmlString = ReplaceTokens(xmlString, vendorControlId, now);
+
+            return (xmlString, vendorControlId);
+        }
+
+        // 3C. Vendor attempted control ID but it's missing/malformed → fallback to engine's
+        var fallbackId = GetNextOutboundControlId();
+
+        if (controlIdElement is null)
+        {
+            // Create the element since vendor didn't supply one
+            hdr.Add(new XElement("HDR.control_id",
+                new XAttribute("V", fallbackId.ToString(CultureInfo.InvariantCulture))));
+        }
+        else
+        {
+            // Overwrite malformed vendor attribute
+            controlIdElement.SetAttributeValue("V", fallbackId.ToString(CultureInfo.InvariantCulture));
+        }
+
+        var fallbackXml = doc.ToString(SaveOptions.DisableFormatting);
+
+        if (fallbackXml.Contains("{{") && fallbackXml.Contains("}}"))
+            fallbackXml = ReplaceTokens(fallbackXml, fallbackId, now);
+
+        return (fallbackXml, fallbackId);
     }
+
 
     /// <summary>
     /// Replaces tokens in the payload:
@@ -393,27 +439,27 @@ public sealed partial class SessionEngine
     {
         // Replace {{ control_id }}
         payload = ControlIdTokenRegex().Replace(payload, controlId.ToString(CultureInfo.InvariantCulture));
-        
+
         // Replace {{ datetime_now }} with default format
-        payload = DateTimeNowDefaultRegex().Replace(payload, 
+        payload = DateTimeNowDefaultRegex().Replace(payload,
             now.ToString(DefaultDateTimeFormat, CultureInfo.InvariantCulture));
-        
+
         // Replace {{ datetime_now:format }}
         payload = DateTimeNowFormatRegex().Replace(payload, match =>
         {
             var format = match.Groups["format"].Value;
             return now.ToString(format, CultureInfo.InvariantCulture);
         });
-        
+
         return payload;
     }
 
     [GeneratedRegex(@"\{\{\s*control_id\s*\}\}", RegexOptions.IgnoreCase)]
     private static partial Regex ControlIdTokenRegex();
-    
+
     [GeneratedRegex(@"\{\{\s*datetime_now\s*\}\}", RegexOptions.IgnoreCase)]
     private static partial Regex DateTimeNowDefaultRegex();
-    
+
     [GeneratedRegex(@"\{\{\s*datetime_now\s*:\s*(?<format>[^}]+)\s*\}\}", RegexOptions.IgnoreCase)]
     private static partial Regex DateTimeNowFormatRegex();
 
@@ -522,7 +568,8 @@ public sealed partial class SessionEngine
             if (ReferenceEquals(message.AckListener, handler))
             {
                 abortedCount++;
-                _logInfo($"[ABORT] Session {Context.SessionId}: Aborted message with control ID {message.ControlId} for handler.");
+                _logInfo(
+                    $"[ABORT] Session {Context.SessionId}: Aborted message with control ID {message.ControlId} for handler.");
             }
             else
             {
@@ -537,7 +584,8 @@ public sealed partial class SessionEngine
 
         if (abortedCount > 0)
         {
-            _logInfo($"[ABORT] Session {Context.SessionId}: Aborted {abortedCount} pending message(s) for handler. Queue depth: {_pendingOutbound.Count}.");
+            _logInfo(
+                $"[ABORT] Session {Context.SessionId}: Aborted {abortedCount} pending message(s) for handler. Queue depth: {_pendingOutbound.Count}.");
         }
     }
 }

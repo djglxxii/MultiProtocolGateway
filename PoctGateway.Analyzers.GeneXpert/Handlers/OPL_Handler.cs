@@ -19,7 +19,8 @@ public sealed class OPL_Handler : HandlerBase, IOutboundAckListener
         "opl_output_chunk_2.xml",
         "opl_output_chunk_3.xml",
         "opl_output_chunk_4.xml",
-        "opl_output_chunk_5.xml"
+        "opl_output_chunk_5.xml",
+        "opl_output_chunk_6.xml"
     ];
     
     public override async Task HandleAsync(SessionContext ctx, Func<Task> next)
