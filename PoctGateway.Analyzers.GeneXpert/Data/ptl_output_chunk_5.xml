@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PTL.R01>
+  <HDR>
+    <HDR.message_type V="PTL" />
+    <HDR.control_id V="861585" />
+    <HDR.version_id V="POCT1" />
+    <HDR.creation_dttm V="2025-11-28T20:52:27.851-05:00" />
+  </HDR>
+  <PT>
+    <PT.patient_id V="MR727471002" />
+    <PT.name V="Jones, Karen" />
+    <PT.birth_date V="1965-10-04" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR432588951" />
+    <PT.name V="Thomas, Mary" />
+    <PT.birth_date V="1971-08-23" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR903659929" />
+    <PT.name V="Martinez, William" />
+    <PT.birth_date V="2005-03-03" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR59765266" />
+    <PT.name V="Rodriguez, Michael" />
+    <PT.birth_date V="1904-10-25" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR840663747" />
+    <PT.name V="Wilson, Jessica" />
+    <PT.birth_date V="1925-02-20" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR947821072" />
+    <PT.name V="Anderson, Jennifer" />
+    <PT.birth_date V="1900-02-26" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR514571809" />
+    <PT.name V="Williams, Jessica" />
+    <PT.birth_date V="1970-09-28" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR769907914" />
+    <PT.name V="Smith, David" />
+    <PT.birth_date V="1923-03-11" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR266547061" />
+    <PT.name V="Lee, Thomas" />
+    <PT.birth_date V="1935-01-25" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR356748879" />
+    <PT.name V="Thomas, Joseph" />
+    <PT.birth_date V="1921-06-22" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR482590183" />
+    <PT.name V="Johnson, Patricia" />
+    <PT.birth_date V="1988-05-23" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR127122130" />
+    <PT.name V="Hernandez, Linda" />
+    <PT.birth_date V="1947-09-08" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR733777021" />
+    <PT.name V="Anderson, Jessica" />
+    <PT.birth_date V="1934-01-21" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR32320389" />
+    <PT.name V="Anderson, Patricia" />
+    <PT.birth_date V="1983-01-11" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR113292937" />
+    <PT.name V="Moore, Elizabeth" />
+    <PT.birth_date V="2014-09-30" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR486285035" />
+    <PT.name V="MooreYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY, JenniferXXXXXXXXXXXXXXXXXXXXXXXXXX" />
+    <PT.birth_date V="1914-03-29" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR862883344" />
+    <PT.name V="Williams, John" />
+    <PT.birth_date V="1986-06-14" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR943785972" />
+    <PT.name V="Rodriguez, William" />
+    <PT.birth_date V="1969-05-05" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR456711217" />
+    <PT.name V="DavisYYYYYYYYYYYYYYYYYYYYYYYYYYYY, RobertXXXXXXXXXXXXXXXXXXXXXX" />
+    <PT.birth_date V="1925-06-28" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR40652325" />
+    <PT.name V="MooreYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY, WilliamXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" />
+    <PT.birth_date V="2013-04-08" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR789413950" />
+    <PT.name V="Wilson, Thomas" />
+    <PT.birth_date V="2019-04-14" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR120710338" />
+    <PT.name V="Martin, Jennifer" />
+    <PT.birth_date V="1986-02-15" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR511538126" />
+    <PT.name V="Wilson, Linda" />
+    <PT.birth_date V="1936-07-08" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR45351394" />
+    <PT.name V="Brown, Michael" />
+    <PT.birth_date V="1965-12-07" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR398066706" />
+    <PT.name V="Lee, Mary" />
+    <PT.birth_date V="1986-04-20" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR141151883" />
+    <PT.name V="Garcia, Karen" />
+    <PT.birth_date V="1925-01-03" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR373439695" />
+    <PT.name V="Moore, Richard" />
+    <PT.birth_date V="2001-03-01" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR927528342" />
+    <PT.name V="Martinez, John" />
+    <PT.birth_date V="2009-07-26" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR771194843" />
+    <PT.name V="WilliamsYYYYYYYYYYYYYYYYYYYYYYYYY, MichaelXXXXXXXXXXXXXXXXXXXXXXXXX" />
+    <PT.birth_date V="1971-11-27" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR466471221" />
+    <PT.name V="Anderson, Jennifer" />
+    <PT.birth_date V="1915-01-02" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR202142808" />
+    <PT.name V="Lopez, Sarah" />
+    <PT.birth_date V="1988-01-08" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR74740089" />
+    <PT.name V="Miller, Patricia" />
+    <PT.birth_date V="1980-08-04" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR14970933" />
+    <PT.name V="Thomas, Jessica" />
+    <PT.birth_date V="1969-02-16" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR320889708" />
+    <PT.name V="Anderson, David" />
+    <PT.birth_date V="1989-08-30" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR44645847" />
+    <PT.name V="Williams, Joseph" />
+    <PT.birth_date V="1965-04-18" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR587941154" />
+    <PT.name V="JohnsonYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY, RobertXXXXXXXXXXXXXXXXXXXXXXXXXX" />
+    <PT.birth_date V="1924-07-12" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR733559746" />
+    <PT.name V="Martinez, Mary" />
+    <PT.birth_date V="1980-11-08" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR395693689" />
+    <PT.name V="Johnson, Susan" />
+    <PT.birth_date V="2017-04-10" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR876285316" />
+    <PT.name V="Hernandez, Linda" />
+    <PT.birth_date V="1998-05-16" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR869987739" />
+    <PT.name V="Jackson, Sarah" />
+    <PT.birth_date V="1965-03-27" />
+  </PT>
+</PTL.R01>

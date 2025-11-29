@@ -44,6 +44,7 @@ public sealed class GeneXpertDevicePack : IVendorDevicePack
             typeof(PTQRY_Handler),
             typeof(OBS_Handler),
             typeof(OPL_Handler),
+            typeof(PTL_Handler),
             typeof(EOT_Handler)
         ];
     }

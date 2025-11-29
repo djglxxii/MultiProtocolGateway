@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PTL.R01>
+  <HDR>
+    <HDR.message_type V="PTL" />
+    <HDR.control_id V="852250" />
+    <HDR.version_id V="POCT1" />
+    <HDR.creation_dttm V="2025-11-28T20:52:27.851-05:00" />
+  </HDR>
+  <PT>
+    <PT.patient_id V="MR642434397" />
+    <PT.name V="Davis, James" />
+    <PT.birth_date V="2011-01-14" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR98589972" />
+    <PT.name V="Lopez, Susan" />
+    <PT.birth_date V="1925-12-18" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR537211902" />
+    <PT.name V="Jackson, Linda" />
+    <PT.birth_date V="2012-06-09" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR989438007" />
+    <PT.name V="Brown, Barbara" />
+    <PT.birth_date V="1934-09-01" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR289607893" />
+    <PT.name V="Wilson, Mary" />
+    <PT.birth_date V="1954-11-23" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR491191364" />
+    <PT.name V="Brown, Linda" />
+    <PT.birth_date V="1953-08-18" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR963640262" />
+    <PT.name V="Martin, Mary" />
+    <PT.birth_date V="1964-12-22" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR100549696" />
+    <PT.name V="Wilson, Barbara" />
+    <PT.birth_date V="2007-04-03" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR392516452" />
+    <PT.name V="Garcia, Linda" />
+    <PT.birth_date V="1910-09-01" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR471381871" />
+    <PT.name V="Garcia, Robert" />
+    <PT.birth_date V="1991-10-17" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR289461667" />
+    <PT.name V="Jackson, John" />
+    <PT.birth_date V="1909-07-21" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR72209457" />
+    <PT.name V="Lopez, David" />
+    <PT.birth_date V="1911-01-30" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR612685673" />
+    <PT.name V="Wilson, Susan" />
+    <PT.birth_date V="1989-08-12" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR849985018" />
+    <PT.name V="Jones, James" />
+    <PT.birth_date V="1995-04-09" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR839909806" />
+    <PT.name V="Miller, Joseph" />
+    <PT.birth_date V="1918-03-01" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR192000375" />
+    <PT.name V="Williams, John" />
+    <PT.birth_date V="2016-11-11" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR984136910" />
+    <PT.name V="Johnson, Charles" />
+    <PT.birth_date V="2011-08-07" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR625208901" />
+    <PT.name V="Anderson, Patricia" />
+    <PT.birth_date V="1915-07-26" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR695682341" />
+    <PT.name V="Jackson, Susan" />
+    <PT.birth_date V="1922-10-05" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR676493934" />
+    <PT.name V="Johnson, Karen" />
+    <PT.birth_date V="1955-12-14" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR742615897" />
+    <PT.name V="Brown, Joseph" />
+    <PT.birth_date V="1997-02-26" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR186769151" />
+    <PT.name V="Davis, William" />
+    <PT.birth_date V="2013-07-10" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR753385261" />
+    <PT.name V="Anderson, Patricia" />
+    <PT.birth_date V="1946-08-12" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR722509469" />
+    <PT.name V="Rodriguez, Joseph" />
+    <PT.birth_date V="1974-11-24" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR579110221" />
+    <PT.name V="Lee, Linda" />
+    <PT.birth_date V="1927-05-11" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR942900640" />
+    <PT.name V="Lee, Robert" />
+    <PT.birth_date V="1957-04-09" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR635988463" />
+    <PT.name V="Jones, Sarah" />
+    <PT.birth_date V="2008-05-14" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR677932564" />
+    <PT.name V="Williams, Richard" />
+    <PT.birth_date V="1994-06-23" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR763174055" />
+    <PT.name V="Martin, Charles" />
+    <PT.birth_date V="1988-09-22" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR345341420" />
+    <PT.name V="Garcia, Charles" />
+    <PT.birth_date V="1984-10-29" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR854988951" />
+    <PT.name V="Rodriguez, William" />
+    <PT.birth_date V="1964-03-23" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR964921484" />
+    <PT.name V="Lopez, Linda" />
+    <PT.birth_date V="2013-07-29" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR441852938" />
+    <PT.name V="Taylor, Richard" />
+    <PT.birth_date V="1921-06-04" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR493968661" />
+    <PT.name V="Taylor, Thomas" />
+    <PT.birth_date V="1986-12-27" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR852563116" />
+    <PT.name V="Johnson, Robert" />
+    <PT.birth_date V="1944-12-11" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR235454148" />
+    <PT.name V="Brown, Thomas" />
+    <PT.birth_date V="1958-10-23" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR954717385" />
+    <PT.name V="Jones, Karen" />
+    <PT.birth_date V="2006-07-31" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR436541874" />
+    <PT.name V="Davis, Robert" />
+    <PT.birth_date V="1929-07-13" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR773210315" />
+    <PT.name V="Taylor, Patricia" />
+    <PT.birth_date V="1920-01-17" />
+  </PT>
+  <PT>
+    <PT.patient_id V="MR557760472" />
+    <PT.name V="Martinez, John" />
+    <PT.birth_date V="2011-02-26" />
+  </PT>
+</PTL.R01>
