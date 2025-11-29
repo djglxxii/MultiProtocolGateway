@@ -202,32 +202,35 @@ public sealed partial class SessionEngine
     private async Task TrySendNextOutboundAsync()
     {
         // Only send if we're not waiting for an ACK
-        if (_currentOutbound is not null)
+        while (_currentOutbound is null && _pendingOutbound.Count > 0)
         {
-            return;
+            var outbound = _pendingOutbound.Dequeue();
+
+            _logInfo($"[SEND] Session {Context.SessionId}: Sending message with control ID {outbound.ControlId}.");
+
+            // Add to message history
+            Context.MessageHistory.Add(new SessionMessage
+            {
+                MessageType = TryGetMessageType(outbound.Payload),
+                Direction = MessageDirection.ServerToDevice,
+                RawPayload = outbound.Payload
+            });
+
+            await _sendRawAsync(outbound.Payload);
+
+            if (outbound.ExpectsAck)
+            {
+                // This message blocks until ACK arrives
+                _currentOutbound = outbound;
+                break;
+            }
+
+            // Fire-and-forget: optionally treat as a success immediately
+            outbound.AckListener?.OnOutboundAcknowledged(outbound.ControlId);
+            // Loop continues and sends the next message immediately
         }
-
-        if (_pendingOutbound.Count == 0)
-        {
-            return;
-        }
-
-        var outbound = _pendingOutbound.Dequeue();
-        _currentOutbound = outbound;
-
-        _logInfo($"[SEND] Session {Context.SessionId}: Sending message with control ID {outbound.ControlId}.");
-
-        // Add to message history
-        Context.MessageHistory.Add(new SessionMessage
-        {
-            MessageType = TryGetMessageType(outbound.Payload),
-            Direction = MessageDirection.ServerToDevice,
-            RawPayload = outbound.Payload
-        });
-
-        await _sendRawAsync(outbound.Payload);
     }
-
+    
     private static string TryGetMessageType(string payload)
     {
         try
@@ -290,7 +293,7 @@ public sealed partial class SessionEngine
         return handlers;
     }
 
-    private Task EnqueueOutboundAsync(string raw, IOutboundAckListener? listener)
+    private Task EnqueueOutboundAsync(string raw, IOutboundAckListener? listener, bool expectsAck)
     {
         if (raw is null)
         {
@@ -300,7 +303,7 @@ public sealed partial class SessionEngine
         // Process the payload: replace tokens and/or inject HDR
         var (processedPayload, controlId) = ProcessOutboundPayload(raw);
 
-        var outboundMessage = new OutboundMessage(processedPayload, controlId, listener);
+        var outboundMessage = new OutboundMessage(processedPayload, controlId, listener, expectsAck);
         _pendingOutbound.Enqueue(outboundMessage);
 
         _logInfo(

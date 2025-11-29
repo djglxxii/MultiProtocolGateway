@@ -32,7 +32,15 @@ public sealed class OPL_Handler : HandlerBase, IOutboundAckListener
                 var path = Path.Combine(AppContext.BaseDirectory, "Data", oplFile);
                 var opl = await File.ReadAllTextAsync(path);
                 // Pass 'this' as the ACK listener to receive notifications
-                await SendAsync(opl, this);
+                if (opl.Contains("<EOT.R01>"))
+                {
+                    await SendAsync(opl, this, expectsAck: false);
+                }
+                else
+                {
+                    await SendAsync(opl, this);
+                }
+                
             }
         }
         
