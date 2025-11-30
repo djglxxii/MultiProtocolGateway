@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using PoctGateway.Analyzers.GeneXpert.Handlers;
-using PoctGateway.Core.Handlers;
 using PoctGateway.Core.Session;
 using PoctGateway.Core.Vendors;
 
